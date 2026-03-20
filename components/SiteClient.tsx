@@ -422,7 +422,6 @@ export default function SiteClient({
 
             {/* Stat bar sections */}
             {[
-              { title: "Golos", emoji: "⚽", key: "g" },
               { title: "Assistências", emoji: "🎯", key: "a" },
               { title: "Jogos Disputados", emoji: "🏟", key: "gp" },
               { title: "Dream Team Points", emoji: "⭐", key: "dp", sub: "A nota de cada jogador jornada a jornada — quanto mais alta, mais perto do onze ideal. Quem brilha, aparece aqui em cima." },
