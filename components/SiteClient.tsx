@@ -354,18 +354,18 @@ export default function SiteClient({
               </table>
             </div>
 
-            <div className="flex gap-5 mt-3.5 flex-wrap">
-              <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                <div className="w-2.5 h-2.5 rounded-sm" style={{ background: "#0062b1" }} /> Campeão — Promoção à Liga 1
+            <div className="flex gap-3 mt-3.5 flex-wrap">
+              <div className="flex items-center gap-1.5 text-xs text-gray-300 bg-black/50 backdrop-blur-sm px-2.5 py-1 rounded-md">
+                <div className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ background: "#0062b1" }} /> Campeão — Promoção à Liga 1
               </div>
-              <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                <div className="w-2.5 h-2.5 rounded-sm" style={{ background: "#009ce0" }} /> Promoção — Liga 1
+              <div className="flex items-center gap-1.5 text-xs text-gray-300 bg-black/50 backdrop-blur-sm px-2.5 py-1 rounded-md">
+                <div className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ background: "#009ce0" }} /> Promoção — Liga 1
               </div>
             </div>
 
             {/* League Rankings */}
             <div className="mt-8">
-              <h3 className="font-display text-2xl tracking-widest text-gold mb-4">Ranking da Liga</h3>
+              <h3 className="font-display text-2xl tracking-widest text-gold mb-4 w-fit bg-black/50 backdrop-blur-sm px-3 py-1 rounded-lg">Ranking da Liga</h3>
               <div className="flex gap-1.5 mb-4 flex-wrap">
                 {[
                   { id: "scorers", label: "⚽ Marcadores" },
@@ -465,7 +465,7 @@ export default function SiteClient({
         {page === "plantel" && (
           <>
             <h2 className="font-display text-3xl tracking-widest mb-5" style={{ textShadow: "0 2px 12px rgba(0,0,0,0.9)" }}>Plantel</h2>
-            <p className="text-[13px] text-gray-400 -mt-3.5 mb-6">{teamName} — Época 2026</p>
+            <p className="text-[13px] text-gray-300 -mt-3.5 mb-6 w-fit bg-black/50 backdrop-blur-sm px-3 py-1 rounded-lg">{teamName} — Época 2026</p>
             <div className="glow-line" />
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
               {[...players]
@@ -500,7 +500,7 @@ export default function SiteClient({
         {page === "estatisticas" && (
           <>
             <h2 className="font-display text-3xl tracking-widest mb-5" style={{ textShadow: "0 2px 12px rgba(0,0,0,0.9)" }}>Estatísticas Individuais</h2>
-            <p className="text-[13px] text-gray-400 -mt-3.5 mb-6">Performance dos jogadores na {competitionName}</p>
+            <p className="text-[13px] text-gray-300 -mt-3.5 mb-6 w-fit bg-black/50 backdrop-blur-sm px-3 py-1 rounded-lg">Performance dos jogadores na {competitionName}</p>
             <div className="glow-line" />
 
             {/* Top scorers */}
@@ -509,7 +509,7 @@ export default function SiteClient({
               if (!scorers.length) return null;
               return (
                 <div className="mb-8">
-                  <div className="font-display text-[22px] tracking-wider text-gold mb-3.5">🏆 Top Marcadores — {teamName}</div>
+                  <div className="font-display text-[22px] tracking-wider text-gold mb-3.5 w-fit bg-black/50 backdrop-blur-sm px-3 py-1 rounded-lg">🏆 Top Marcadores — {teamName}</div>
                   <div className="bg-black/60 backdrop-blur-md rounded-xl border border-white/10 py-2">
                     {scorers.map((p: any, i: number) => (
                       <div key={i} className="flex items-center gap-3 px-3.5 py-2.5 border-b border-white/[0.04] last:border-b-0">
@@ -535,8 +535,8 @@ export default function SiteClient({
               const max = sorted[0][key];
               return (
                 <div key={key} className="mb-8">
-                  <div className="font-display text-[22px] tracking-wider text-gold mb-3.5">{emoji} {title}</div>
-                  {sub && <div className="text-xs text-gray-500 -mt-2 mb-3.5 leading-relaxed">{sub}</div>}
+                  <div className="font-display text-[22px] tracking-wider text-gold mb-3.5 w-fit bg-black/50 backdrop-blur-sm px-3 py-1 rounded-lg">{emoji} {title}</div>
+                  {sub && <div className="text-xs text-gray-300 -mt-2 mb-3.5 leading-relaxed w-fit bg-black/50 backdrop-blur-sm px-3 py-1.5 rounded-lg">{sub}</div>}
                   <div className="bg-black/60 backdrop-blur-md rounded-xl border border-white/10 p-4">
                     {sorted.map((p: any, i: number) => (
                       <div key={i} className="flex items-center gap-3 py-2">
@@ -558,7 +558,7 @@ export default function SiteClient({
         {page === "highlights" && (
           <>
             <h2 className="font-display text-3xl tracking-widest mb-5" style={{ textShadow: "0 2px 12px rgba(0,0,0,0.9)" }}>Highlights</h2>
-            <p className="text-[13px] text-gray-400 -mt-3.5 mb-6">Vídeos dos jogos do {teamName} na {competitionName}</p>
+            <p className="text-[13px] text-gray-300 -mt-3.5 mb-6 w-fit bg-black/50 backdrop-blur-sm px-3 py-1 rounded-lg">Vídeos dos jogos do {teamName} na {competitionName}</p>
             <div className="glow-line" />
 
             {highlights.length === 0 ? (
