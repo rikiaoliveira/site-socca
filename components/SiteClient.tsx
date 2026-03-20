@@ -161,12 +161,6 @@ export default function SiteClient({
           </div>
         )}
 
-        <div className="absolute bottom-7 z-[2] flex flex-col items-center gap-1.5 opacity-40" style={{ animation: "floatDown 2s ease-in-out infinite" }}>
-          <span className="text-[11px] tracking-[2px] uppercase text-gray-400">Explorar</span>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" strokeWidth="2" stroke="currentColor" className="text-gray-400">
-            <path d="M12 5v14M5 12l7 7 7-7"/>
-          </svg>
-        </div>
       </section>
     );
   }
