@@ -123,13 +123,13 @@ export default function SiteClient({
   return (
     <div className="relative min-h-screen">
       {/* Background photo - positioned below header */}
-      <div className="absolute top-[110px] left-0 right-0 z-0 h-[500px] overflow-hidden">
+      <div className="absolute top-[220px] left-0 right-0 z-0 h-[500px] overflow-hidden">
         <div
-          className="absolute inset-0 bg-cover bg-top bg-no-repeat"
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{ backgroundImage: `url(/backgrounds/${bgPhoto}.jpg)` }}
         />
         <div className="absolute inset-0" style={{
-          background: "linear-gradient(180deg, rgba(10,10,12,0.75) 0%, rgba(10,10,12,0.88) 40%, rgba(10,10,12,1) 100%)",
+          background: "linear-gradient(180deg, rgba(10,10,12,0.6) 0%, rgba(10,10,12,0.85) 40%, rgba(10,10,12,1) 100%)",
         }} />
       </div>
 
