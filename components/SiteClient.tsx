@@ -123,12 +123,7 @@ export default function SiteClient({
   return (
     <div className="relative min-h-screen">
       {/* Background photo - positioned below header */}
-      <div className="absolute top-[110px] left-0 right-0 z-0 h-[500px] overflow-hidden">
-        <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: `url(/backgrounds/${bgPhoto}.jpg)` }}
-        />
-      </div>
+      <div className="fixed inset-0 z-[-1] bg-cover bg-center bg-no-repeat" style={{ backgroundImage: `url(/backgrounds/${bgPhoto}.jpg)` }} />
 
       {/* Header */}
       <header className="sticky top-0 z-50 bg-dark/85 backdrop-blur-xl border-b border-border relative">
