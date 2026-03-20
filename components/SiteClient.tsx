@@ -123,10 +123,11 @@ export default function SiteClient({
   return (
     <div className="relative min-h-screen">
       {/* Background photo - positioned below header */}
-      <div className="fixed inset-0 z-[-1] bg-cover bg-center bg-no-repeat" style={{ backgroundImage: `url(/backgrounds/${bgPhoto}.jpg)` }} />
+      <div className="fixed inset-0 z-[-2] bg-cover bg-center bg-no-repeat" style={{ backgroundImage: `url(/backgrounds/${bgPhoto}.jpg)` }} />
+      <div className="fixed inset-0 z-[-1] bg-black/50" />
 
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-dark/85 backdrop-blur-xl border-b border-border relative">
+      <header className="sticky top-0 z-50 bg-dark backdrop-blur-xl border-b border-border relative">
         <div className="max-w-[1100px] mx-auto px-4 sm:px-6 py-3 flex items-center gap-3">
           <img src={teamImg(teamLogo)} alt="MSG" className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg object-cover" />
           <div className="min-w-0">
