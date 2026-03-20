@@ -173,7 +173,7 @@ export default function SiteClient({
       <div className="relative flex-1 min-h-[calc(100vh-104px)]">
         <div className="sticky top-0 h-0 w-full pointer-events-none z-0">
           <div className="absolute top-0 inset-x-0 h-[calc(100vh-104px)] overflow-hidden">
-            <div className="absolute inset-0 bg-cover bg-no-repeat" style={{ backgroundPosition: "center 20%" }} style={{ backgroundImage: `url(/backgrounds/${bgPhoto}.jpg)` }} />
+            <div className="absolute inset-0 bg-cover bg-no-repeat" style={{ backgroundImage: `url(/backgrounds/${bgPhoto}.jpg)`, backgroundPosition: "center 20%" }} />
             <div className="absolute inset-0 bg-black/72" />
           </div>
         </div>
