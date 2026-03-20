@@ -84,11 +84,17 @@ body {
   position: absolute;
   inset: 0;
   background-size: cover;
-  background-position: center 25%;
+  background-position: center 30%;
   opacity: 0;
   transition: opacity 1.2s ease;
 }
 .hero-slide.active { opacity: 1; }
+@media (max-width: 640px) {
+  .hero-slide {
+    background-position: center top;
+    background-size: auto 100%;
+  }
+}
 
 /* Animations */
 @keyframes fadeUp {

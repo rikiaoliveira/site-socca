@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx kill-port:*)",
+      "Bash(gh run:*)",
+      "Bash(npm run:*)"
+    ]
+  }
+}

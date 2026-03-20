@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { TEAM_ID, teamImg } from "@/lib/api";
 
 const POS_NAMES: Record<number, string> = {
@@ -25,13 +25,32 @@ export default function SiteClient({
   const [page, setPage] = useState<string | null>(null);
   const [rankTab, setRankTab] = useState("scorers");
   const [heroSlide, setHeroSlide] = useState(0);
-  const [bgPhoto, setBgPhoto] = useState(() => Math.floor(Math.random() * 79) + 1);
+  const BG_PHOTOS = Array.from({ length: 27 }, (_, i) => String(i + 1));
+  const [bgPhoto, setBgPhoto] = useState(() => BG_PHOTOS[Math.floor(Math.random() * BG_PHOTOS.length)]);
+  const [installPrompt, setInstallPrompt] = useState<any>(null);
+  const [showIosHint, setShowIosHint] = useState(false);
+  const [isIos, setIsIos] = useState(false);
 
-  const TOTAL_BG = 79;
+  useEffect(() => {
+    setIsIos(/iphone|ipad|ipod/i.test(navigator.userAgent));
+    const handler = (e: any) => { e.preventDefault(); setInstallPrompt(e); };
+    window.addEventListener("beforeinstallprompt", handler);
+    return () => window.removeEventListener("beforeinstallprompt", handler);
+  }, []);
 
   function goToPage(p: string) {
-    setBgPhoto(Math.floor(Math.random() * TOTAL_BG) + 1);
+    setBgPhoto(BG_PHOTOS[Math.floor(Math.random() * BG_PHOTOS.length)]);
     setPage(p);
+  }
+
+  async function handleInstall() {
+    if (installPrompt) {
+      installPrompt.prompt();
+      const { outcome } = await installPrompt.userChoice;
+      if (outcome === "accepted") setInstallPrompt(null);
+    } else if (isIos) {
+      setShowIosHint(true);
+    }
   }
 
   // Hero slideshow
@@ -109,6 +128,39 @@ export default function SiteClient({
           </nav>
         </div>
 
+        {/* Install button - mobile only */}
+        {(installPrompt || isIos) && (
+          <div className="absolute bottom-20 z-[2] sm:hidden">
+            <button
+              onClick={handleInstall}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gold/10 border border-gold/30 text-gold text-xs font-semibold backdrop-blur-sm"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 2v13M7 10l5 5 5-5"/><path d="M5 20h14"/></svg>
+              Adicionar ao ecrã inicial
+            </button>
+          </div>
+        )}
+
+        {/* iOS hint modal */}
+        {showIosHint && (
+          <div className="fixed inset-0 z-50 flex items-end justify-center p-4" onClick={() => setShowIosHint(false)}>
+            <div className="bg-[#1c1c1e] border border-white/10 rounded-2xl p-5 w-full max-w-sm mb-4" onClick={e => e.stopPropagation()}>
+              <div className="text-white font-bold text-base mb-3">Adicionar ao ecrã inicial</div>
+              <div className="flex items-start gap-3 mb-3">
+                <span className="text-2xl">1️⃣</span>
+                <p className="text-gray-300 text-sm">Toca no botão <strong>Partilhar</strong> <span className="inline-block border border-gray-500 rounded px-1 text-xs">⎋</span> na barra do Safari</p>
+              </div>
+              <div className="flex items-start gap-3 mb-4">
+                <span className="text-2xl">2️⃣</span>
+                <p className="text-gray-300 text-sm">Escolhe <strong>"Adicionar ao ecrã de início"</strong></p>
+              </div>
+              <button onClick={() => setShowIosHint(false)} className="w-full py-2.5 rounded-xl bg-gold text-black font-bold text-sm">
+                OK
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="absolute bottom-7 z-[2] flex flex-col items-center gap-1.5 opacity-40" style={{ animation: "floatDown 2s ease-in-out infinite" }}>
           <span className="text-[11px] tracking-[2px] uppercase text-gray-400">Explorar</span>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" strokeWidth="2" stroke="currentColor" className="text-gray-400">
@@ -173,7 +225,7 @@ export default function SiteClient({
       <div className="relative flex-1 min-h-[calc(100vh-104px)]">
         <div className="sticky top-0 h-0 w-full pointer-events-none z-0">
           <div className="absolute top-0 inset-x-0 h-[calc(100vh-104px)] overflow-hidden">
-            <div className="absolute inset-0 bg-cover bg-no-repeat" style={{ backgroundImage: `url(/backgrounds/${bgPhoto}.jpg)`, backgroundPosition: "center 20%" }} />
+            <div className="absolute inset-0 bg-cover bg-no-repeat" style={{ backgroundImage: `url(/backgrounds/${bgPhoto}.jpg)`, backgroundPosition: "center 20%", backgroundSize: "cover" }} />
             <div className="absolute inset-0 bg-black/72" />
           </div>
         </div>
@@ -323,8 +375,8 @@ export default function SiteClient({
               const isGalaxy = m.h === TEAM_ID || m.a === TEAM_ID;
               return (
                 <div key={i} className="mb-4 sm:mb-6">
-                  <div className="font-display text-lg sm:text-xl tracking-wider text-gray-300 mb-2 flex items-center gap-2" style={{ textShadow: "0 1px 6px rgba(0,0,0,0.9)" }}>
-                    {m.day} <span className="font-body text-[11px] sm:text-xs font-medium text-gray-400 opacity-90 tracking-normal">{formatDate(m.date)}</span>
+                  <div className="font-display text-lg sm:text-xl tracking-wider text-gray-300 mb-2 flex items-center gap-2 w-fit bg-black/50 backdrop-blur-sm px-3 py-1 rounded-lg">
+                    {m.day} <span className="font-body text-[11px] sm:text-xs font-medium text-gray-300 tracking-normal bg-black/50 backdrop-blur-sm px-2 py-0.5 rounded-md">{formatDate(m.date)}</span>
                   </div>
                   <div className={`bg-black/60 backdrop-blur-md border border-white/10 rounded-xl p-3 sm:p-3.5 flex items-center gap-2.5 sm:gap-3.5 transition-colors hover:border-gold/20 ${isGalaxy ? "border-l-[3px] border-l-gold" : ""}`}>
                     <div className={`result-badge ${result || "tbd"} shrink-0`}>
