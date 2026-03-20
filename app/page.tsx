@@ -4,6 +4,7 @@ import {
   getScorers,
   getAssists,
   getMvps,
+  getHighlights,
   TEAMS,
   TEAM_ID,
   teamImg,
@@ -13,16 +14,17 @@ import SiteClient from "@/components/SiteClient";
 export const revalidate = 300; // revalidate every 5 min
 
 export default async function Home() {
-  let classificationData, teamData, scorersData, assistsData, mvpsData;
+  let classificationData, teamData, scorersData, assistsData, mvpsData, highlightsData;
 
   try {
-    [classificationData, teamData, scorersData, assistsData, mvpsData] =
+    [classificationData, teamData, scorersData, assistsData, mvpsData, highlightsData] =
       await Promise.all([
         getClassification(),
         getTeamDetails(),
         getScorers(),
         getAssists(),
         getMvps(),
+        getHighlights(),
       ]);
   } catch (error) {
     return (
@@ -125,6 +127,23 @@ export default async function Home() {
     teamData.teamImgUrl3,
   ].filter(Boolean);
 
+  // Process highlights from sport.video
+  const highlights = (highlightsData || []).map((g: any) => ({
+    id: g.id,
+    slug: g.slug,
+    name: g.name,
+    homeTeam: g.homeTeam?.name || "",
+    homeLogo: g.homeTeam?.smallLogoUrl || "",
+    guestTeam: g.guestTeam?.name || "",
+    guestLogo: g.guestTeam?.smallLogoUrl || "",
+    homeScore: g.homeScore,
+    guestScore: g.guestScore,
+    date: g.date,
+    thumbnail: g.thumbnailUrl,
+    views: g.highlightViewsCount || 0,
+    url: `https://watch.sport.video/socca-portugal/liga-2-amora/${g.slug}`,
+  }));
+
   // Teams map with logos (update from API data if available)
   const teamsMap = { ...TEAMS };
 
@@ -136,6 +155,7 @@ export default async function Home() {
       leagueScorers={leagueScorers}
       leagueAssists={leagueAssists}
       leagueMvps={leagueMvps}
+      highlights={highlights}
       heroPhotos={heroPhotos}
       teams={teamsMap}
       teamName={teamData.name || "MS Galaxy"}

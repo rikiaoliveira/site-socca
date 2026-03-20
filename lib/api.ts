@@ -54,3 +54,26 @@ export async function getAssists() {
 export async function getMvps() {
   return apiFetch(`/tournaments/${TOURNAMENT_ID}/ranking/players/mvps/1/999`);
 }
+
+// Sport.video highlights
+const SPORT_VIDEO_COMPETITION = "904102655";
+const SPORT_VIDEO_TEAM_ID = "904951014"; // MS Galaxy on sport.video
+
+export async function getHighlights() {
+  const res = await fetch(
+    `https://sport.video/viewing-api/games/?count=50&competitions=${SPORT_VIDEO_COMPETITION}&recordingState=ended&sort=-date&offset=0`,
+    {
+      headers: { Accept: "application/json" },
+      next: { revalidate: 300 },
+    }
+  );
+  if (!res.ok) throw new Error(`Sport.video API error: ${res.status}`);
+  const data = await res.json();
+
+  // Filter only MS Galaxy games
+  return (data.results || []).filter(
+    (game: any) =>
+      game.homeTeam?.id === SPORT_VIDEO_TEAM_ID ||
+      game.guestTeam?.id === SPORT_VIDEO_TEAM_ID
+  );
+}
