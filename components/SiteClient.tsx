@@ -29,10 +29,28 @@ export default function SiteClient({
   const [bgPhoto, setBgPhoto] = useState(() => BG_PHOTOS[Math.floor(Math.random() * BG_PHOTOS.length)]);
   const [installPrompt, setInstallPrompt] = useState<any>(null);
   const [showIosHint, setShowIosHint] = useState(false);
+  const [showChromeHint, setShowChromeHint] = useState(false);
   const [isIos, setIsIos] = useState(false);
+  const [isChrome, setIsChrome] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  const [isIosChrome, setIsIosChrome] = useState(false);
 
   useEffect(() => {
-    setIsIos(/iphone|ipad|ipod/i.test(navigator.userAgent));
+    const ua = navigator.userAgent;
+    const ios = /iphone|ipad|ipod/i.test(ua);
+    const iosChrome = ios && /CriOS/i.test(ua);
+    const chrome = /chrome/i.test(ua) && !/edg/i.test(ua) && !ios;
+    const mobile = /iphone|ipad|ipod|android/i.test(ua);
+    setIsIos(ios);
+    setIsIosChrome(iosChrome);
+    setIsChrome(chrome);
+    setIsMobile(mobile);
+
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js");
+    }
+
     const handler = (e: any) => { e.preventDefault(); setInstallPrompt(e); };
     window.addEventListener("beforeinstallprompt", handler);
     return () => window.removeEventListener("beforeinstallprompt", handler);
@@ -50,6 +68,8 @@ export default function SiteClient({
       if (outcome === "accepted") setInstallPrompt(null);
     } else if (isIos) {
       setShowIosHint(true);
+    } else if (isChrome) {
+      setShowChromeHint(true);
     }
   }
 
@@ -126,18 +146,45 @@ export default function SiteClient({
               </button>
             ))}
           </nav>
-        </div>
 
-        {/* Install button - mobile only */}
-        {(installPrompt || isIos) && (
-          <div className="absolute bottom-20 z-[2] sm:hidden">
+          {/* Install button */}
+          {(installPrompt || isIos || isChrome) && (
             <button
               onClick={handleInstall}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gold/10 border border-gold/30 text-gold text-xs font-semibold backdrop-blur-sm"
+              className="mt-5 flex items-center gap-2 px-4 py-2 rounded-xl bg-gold/10 border border-gold/30 text-gold text-xs font-semibold backdrop-blur-sm transition-all hover:bg-gold/20"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 2v13M7 10l5 5 5-5"/><path d="M5 20h14"/></svg>
               Adicionar ao ecrã inicial
             </button>
+          )}
+        </div>
+
+        {/* Chrome hint modal */}
+        {showChromeHint && (
+          <div className="fixed inset-0 z-50 flex items-end justify-center p-4" onClick={() => setShowChromeHint(false)}>
+            <div className="bg-[#1c1c1e] border border-white/10 rounded-2xl p-5 w-full max-w-sm mb-4" onClick={e => e.stopPropagation()}>
+              <div className="text-white font-bold text-base mb-3">Adicionar ao ecrã inicial</div>
+              {isMobile ? (<>
+                <div className="flex items-start gap-3 mb-3">
+                  <span className="text-2xl">1️⃣</span>
+                  <p className="text-gray-300 text-sm">Toca nos <strong>três pontos</strong> <span className="inline-block border border-gray-500 rounded px-1 text-xs">⋮</span> no canto superior direito do Chrome</p>
+                </div>
+                <div className="flex items-start gap-3 mb-4">
+                  <span className="text-2xl">2️⃣</span>
+                  <p className="text-gray-300 text-sm">Escolhe <strong>"Adicionar ao ecrã inicial"</strong></p>
+                </div>
+              </>) : (<>
+                <div className="flex items-start gap-3 mb-3">
+                  <span className="text-2xl">1️⃣</span>
+                  <p className="text-gray-300 text-sm">Clica no ícone <strong>instalar</strong> <span className="inline-block border border-gray-500 rounded px-1 text-xs">⊕</span> na barra de endereços do Chrome</p>
+                </div>
+                <div className="flex items-start gap-3 mb-4">
+                  <span className="text-2xl">2️⃣</span>
+                  <p className="text-gray-300 text-sm">Ou vai ao menu <strong>⋮ → Guardar e partilhar → Instalar página como app</strong></p>
+                </div>
+              </>)}
+              <button onClick={() => setShowChromeHint(false)} className="w-full py-2.5 rounded-xl bg-gold text-black font-bold text-sm">OK</button>
+            </div>
           </div>
         )}
 
@@ -145,18 +192,32 @@ export default function SiteClient({
         {showIosHint && (
           <div className="fixed inset-0 z-50 flex items-end justify-center p-4" onClick={() => setShowIosHint(false)}>
             <div className="bg-[#1c1c1e] border border-white/10 rounded-2xl p-5 w-full max-w-sm mb-4" onClick={e => e.stopPropagation()}>
-              <div className="text-white font-bold text-base mb-3">Adicionar ao ecrã inicial</div>
-              <div className="flex items-start gap-3 mb-3">
-                <span className="text-2xl">1️⃣</span>
-                <p className="text-gray-300 text-sm">Toca no botão <strong>Partilhar</strong> <span className="inline-block border border-gray-500 rounded px-1 text-xs">⎋</span> na barra do Safari</p>
-              </div>
-              <div className="flex items-start gap-3 mb-4">
-                <span className="text-2xl">2️⃣</span>
-                <p className="text-gray-300 text-sm">Escolhe <strong>"Adicionar ao ecrã de início"</strong></p>
-              </div>
-              <button onClick={() => setShowIosHint(false)} className="w-full py-2.5 rounded-xl bg-gold text-black font-bold text-sm">
-                OK
-              </button>
+              <div className="text-white font-bold text-base mb-1">Adicionar ao ecrã inicial</div>
+              <div className="text-[11px] text-gray-500 mb-4">{isIosChrome ? "Chrome no iPhone/iPad" : "Safari no iPhone/iPad"}</div>
+              {isIosChrome ? (<>
+                <div className="flex items-start gap-3 mb-3">
+                  <span className="text-2xl">1️⃣</span>
+                  <p className="text-gray-300 text-sm">Toca no botão <strong>Partilhar</strong> <span className="inline-block border border-gray-500 rounded px-1 text-xs">⎋</span> perto da barra de endereços</p>
+                </div>
+                <div className="flex items-start gap-3 mb-3">
+                  <span className="text-2xl">2️⃣</span>
+                  <p className="text-gray-300 text-sm">Escolhe <strong>"Ver mais"</strong></p>
+                </div>
+                <div className="flex items-start gap-3 mb-4">
+                  <span className="text-2xl">3️⃣</span>
+                  <p className="text-gray-300 text-sm">Toca em <strong>"Adicionar ao ecrã principal"</strong></p>
+                </div>
+              </>) : (<>
+                <div className="flex items-start gap-3 mb-3">
+                  <span className="text-2xl">1️⃣</span>
+                  <p className="text-gray-300 text-sm">Toca no botão <strong>Partilhar</strong> <span className="inline-block border border-gray-500 rounded px-1 text-xs">⎋</span> na barra do Safari</p>
+                </div>
+                <div className="flex items-start gap-3 mb-4">
+                  <span className="text-2xl">2️⃣</span>
+                  <p className="text-gray-300 text-sm">Escolhe <strong>"Adicionar ao ecrã de início"</strong></p>
+                </div>
+              </>)}
+              <button onClick={() => setShowIosHint(false)} className="w-full py-2.5 rounded-xl bg-gold text-black font-bold text-sm">OK</button>
             </div>
           </div>
         )}
