@@ -121,10 +121,7 @@ export default function SiteClient({
 
   // ═══ INNER PAGES ═══
   return (
-    <div className="relative min-h-screen">
-      {/* Background photo - positioned below header */}
-      <div className="fixed left-0 right-0 bottom-0 top-[104px] z-[-2] bg-cover bg-center bg-no-repeat" style={{ backgroundImage: `url(/backgrounds/${bgPhoto}.jpg)` }} />
-      <div className="fixed left-0 right-0 bottom-0 top-[104px] z-[-1] bg-black/50" />
+    <div className="min-h-screen flex flex-col">
 
       {/* Header */}
       <header className="sticky top-0 z-50 bg-dark/85 backdrop-blur-xl border-b border-border relative">
@@ -173,18 +170,25 @@ export default function SiteClient({
         </div>
       </header>
 
+      <div className="relative flex-1 min-h-[calc(100vh-104px)]">
+        <div className="sticky top-0 h-0 w-full pointer-events-none z-0">
+          <div className="absolute top-0 inset-x-0 h-[calc(100vh-104px)] overflow-hidden">
+            <div className="absolute inset-0 bg-cover bg-no-repeat" style={{ backgroundPosition: "center 20%" }} style={{ backgroundImage: `url(/backgrounds/${bgPhoto}.jpg)` }} />
+            <div className="absolute inset-0 bg-black/72" />
+          </div>
+        </div>
       <main className="relative z-10 max-w-[1100px] mx-auto px-4 sm:px-6 py-5 sm:py-7 pb-16" style={{ animation: "fadeUp 0.35s ease both" }}>
 
         {/* ═══ CLASSIFICAÇÃO ═══ */}
         {page === "classificacao" && (
           <>
-            <h2 className="font-display text-3xl tracking-widest mb-5">Classificação</h2>
+            <h2 className="font-display text-3xl tracking-widest mb-5" style={{ textShadow: "0 2px 12px rgba(0,0,0,0.9)" }}>Classificação</h2>
             <div className="glow-line" />
 
-            <div className="bg-surface rounded-xl border border-border overflow-x-auto">
+            <div className="bg-black/60 backdrop-blur-md rounded-xl border border-white/10 overflow-x-auto">
               <table className="w-full text-[13px] min-w-[700px]">
                 <thead>
-                  <tr className="bg-surface2 text-[11px] uppercase tracking-wider text-gray-500">
+                  <tr className="bg-white/5 text-[11px] uppercase tracking-wider text-gray-300">
                     <th className="p-3 text-center w-10">#</th>
                     <th className="p-3 text-left">Equipa</th>
                     <th className="p-3 text-center">Forma</th>
@@ -270,7 +274,7 @@ export default function SiteClient({
                   </button>
                 ))}
               </div>
-              <div className="bg-surface rounded-xl border border-border py-2">
+              <div className="bg-black/60 backdrop-blur-md rounded-xl border border-white/10 py-2">
                 {(rankData[rankTab] || []).map((p: any, i: number) => {
                   const tm = teams[p.team] || { name: "?", logo: "" };
                   const isGalaxy = p.team === TEAM_ID;
@@ -291,11 +295,11 @@ export default function SiteClient({
         {/* ═══ CALENDÁRIO ═══ */}
         {page === "calendario" && (
           <>
-            <h2 className="font-display text-3xl tracking-widest mb-5">Calendário & Resultados</h2>
+            <h2 className="font-display text-3xl tracking-widest mb-5" style={{ textShadow: "0 2px 12px rgba(0,0,0,0.9)" }}>Calendário & Resultados</h2>
             <div className="glow-line" />
 
             {nextMatch && (
-              <div className="bg-gradient-to-br from-gold/[0.06] to-transparent border border-gold/10 rounded-2xl p-4 sm:p-6 mb-5 sm:mb-7 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-5">
+              <div className="bg-black/50 backdrop-blur-md border border-gold/20 rounded-2xl p-4 sm:p-6 mb-5 sm:mb-7 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-5">
                 <div>
                   <div className="text-[11px] uppercase tracking-[1.5px] text-gold-dim font-semibold mb-1.5">Próximo Jogo</div>
                   <div className="font-display text-xl sm:text-2xl md:text-[28px] tracking-widest flex items-center gap-2 sm:gap-2.5 flex-wrap">
@@ -319,10 +323,10 @@ export default function SiteClient({
               const isGalaxy = m.h === TEAM_ID || m.a === TEAM_ID;
               return (
                 <div key={i} className="mb-4 sm:mb-6">
-                  <div className="font-display text-lg sm:text-xl tracking-wider text-gray-500 mb-2 flex items-center gap-2">
-                    {m.day} <span className="font-body text-[11px] sm:text-xs font-medium text-gray-500 opacity-60 tracking-normal">{formatDate(m.date)}</span>
+                  <div className="font-display text-lg sm:text-xl tracking-wider text-gray-300 mb-2 flex items-center gap-2" style={{ textShadow: "0 1px 6px rgba(0,0,0,0.9)" }}>
+                    {m.day} <span className="font-body text-[11px] sm:text-xs font-medium text-gray-400 opacity-90 tracking-normal">{formatDate(m.date)}</span>
                   </div>
-                  <div className={`bg-surface border border-border rounded-xl p-3 sm:p-3.5 flex items-center gap-2.5 sm:gap-3.5 transition-colors hover:border-gold/20 ${isGalaxy ? "border-l-[3px] border-l-gold" : ""}`}>
+                  <div className={`bg-black/60 backdrop-blur-md border border-white/10 rounded-xl p-3 sm:p-3.5 flex items-center gap-2.5 sm:gap-3.5 transition-colors hover:border-gold/20 ${isGalaxy ? "border-l-[3px] border-l-gold" : ""}`}>
                     <div className={`result-badge ${result || "tbd"} shrink-0`}>
                       {result === "win" ? "V" : result === "loss" ? "D" : result === "draw" ? "E" : "—"}
                     </div>
@@ -336,7 +340,7 @@ export default function SiteClient({
                           {m.hs}<span className="text-gray-500 text-base sm:text-lg mx-0.5 sm:mx-1">–</span>{m.as}
                         </div>
                       ) : (
-                        <div className="text-[11px] sm:text-[13px] text-gray-500 font-medium min-w-[50px] sm:min-w-[70px] text-center shrink-0">Por jogar</div>
+                        <div className="text-[11px] sm:text-[13px] text-gray-300 font-medium min-w-[50px] sm:min-w-[70px] text-center shrink-0">Por jogar</div>
                       )}
                       <div className={`flex-1 flex items-center gap-1.5 sm:gap-2 justify-end font-semibold text-xs sm:text-sm min-w-0 ${m.a === TEAM_ID ? "text-gold" : ""}`}>
                         <span className="truncate">{m.awayName}</span>
@@ -353,14 +357,14 @@ export default function SiteClient({
         {/* ═══ PLANTEL ═══ */}
         {page === "plantel" && (
           <>
-            <h2 className="font-display text-3xl tracking-widest mb-5">Plantel</h2>
-            <p className="text-[13px] text-gray-500 -mt-3.5 mb-6">{teamName} — Época 2026</p>
+            <h2 className="font-display text-3xl tracking-widest mb-5" style={{ textShadow: "0 2px 12px rgba(0,0,0,0.9)" }}>Plantel</h2>
+            <p className="text-[13px] text-gray-400 -mt-3.5 mb-6">{teamName} — Época 2026</p>
             <div className="glow-line" />
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
               {[...players]
                 .sort((a: any, b: any) => b.gp - a.gp || b.dp - a.dp)
                 .map((p: any, i: number) => (
-                  <div key={i} className="bg-surface border border-border rounded-xl p-4 flex items-center gap-3.5 transition-all hover:border-gold/25 hover:-translate-y-px">
+                  <div key={i} className="bg-black/60 backdrop-blur-md border border-white/10 rounded-xl p-4 flex items-center gap-3.5 transition-all hover:border-gold/25 hover:-translate-y-px">
                     <img
                       src={teamImg(p.ph)}
                       alt={`${p.name} ${p.sur}`}
@@ -388,8 +392,8 @@ export default function SiteClient({
         {/* ═══ ESTATÍSTICAS ═══ */}
         {page === "estatisticas" && (
           <>
-            <h2 className="font-display text-3xl tracking-widest mb-5">Estatísticas Individuais</h2>
-            <p className="text-[13px] text-gray-500 -mt-3.5 mb-6">Performance dos jogadores na {competitionName}</p>
+            <h2 className="font-display text-3xl tracking-widest mb-5" style={{ textShadow: "0 2px 12px rgba(0,0,0,0.9)" }}>Estatísticas Individuais</h2>
+            <p className="text-[13px] text-gray-400 -mt-3.5 mb-6">Performance dos jogadores na {competitionName}</p>
             <div className="glow-line" />
 
             {/* Top scorers */}
@@ -399,7 +403,7 @@ export default function SiteClient({
               return (
                 <div className="mb-8">
                   <div className="font-display text-[22px] tracking-wider text-gold mb-3.5">🏆 Top Marcadores — {teamName}</div>
-                  <div className="bg-surface rounded-xl border border-border py-2">
+                  <div className="bg-black/60 backdrop-blur-md rounded-xl border border-white/10 py-2">
                     {scorers.map((p: any, i: number) => (
                       <div key={i} className="flex items-center gap-3 px-3.5 py-2.5 border-b border-white/[0.04] last:border-b-0">
                         <div className={`font-display text-lg w-7 text-center ${i < 3 ? "text-gold" : "text-gray-500"}`}>{i + 1}</div>
@@ -426,7 +430,7 @@ export default function SiteClient({
                 <div key={key} className="mb-8">
                   <div className="font-display text-[22px] tracking-wider text-gold mb-3.5">{emoji} {title}</div>
                   {sub && <div className="text-xs text-gray-500 -mt-2 mb-3.5 leading-relaxed">{sub}</div>}
-                  <div className="bg-surface rounded-xl border border-border p-4">
+                  <div className="bg-black/60 backdrop-blur-md rounded-xl border border-white/10 p-4">
                     {sorted.map((p: any, i: number) => (
                       <div key={i} className="flex items-center gap-3 py-2">
                         <div className="w-40 font-semibold text-[13px] truncate shrink-0">{p.name} {p.sur}</div>
@@ -446,12 +450,12 @@ export default function SiteClient({
         {/* ═══ HIGHLIGHTS ═══ */}
         {page === "highlights" && (
           <>
-            <h2 className="font-display text-3xl tracking-widest mb-5">Highlights</h2>
-            <p className="text-[13px] text-gray-500 -mt-3.5 mb-6">Vídeos dos jogos do {teamName} na {competitionName}</p>
+            <h2 className="font-display text-3xl tracking-widest mb-5" style={{ textShadow: "0 2px 12px rgba(0,0,0,0.9)" }}>Highlights</h2>
+            <p className="text-[13px] text-gray-400 -mt-3.5 mb-6">Vídeos dos jogos do {teamName} na {competitionName}</p>
             <div className="glow-line" />
 
             {highlights.length === 0 ? (
-              <div className="bg-surface rounded-xl border border-border p-12 text-center">
+              <div className="bg-black/60 backdrop-blur-md rounded-xl border border-white/10 p-12 text-center">
                 <div className="text-2xl mb-2">🎬</div>
                 <div className="text-gray-400">Ainda não há highlights disponíveis.</div>
               </div>
@@ -463,7 +467,7 @@ export default function SiteClient({
                     href={h.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group bg-surface border border-border rounded-xl overflow-hidden transition-all hover:border-gold/30 hover:-translate-y-0.5"
+                    className="group bg-black/60 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden transition-all hover:border-gold/30 hover:-translate-y-0.5"
                   >
                     {/* Thumbnail */}
                     <div className="relative aspect-video overflow-hidden">
@@ -508,6 +512,7 @@ export default function SiteClient({
           </>
         )}
       </main>
+      </div>
     </div>
   );
 }
