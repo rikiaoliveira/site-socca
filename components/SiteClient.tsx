@@ -562,7 +562,6 @@ export default function SiteClient({
             {[
               { title: "Assistências", emoji: "🎯", key: "a" },
               { title: "Jogos Disputados", emoji: "🏟", key: "gp" },
-              { title: "Dream Team Points", emoji: "⭐", key: "dp", sub: "A nota de cada jogador jornada a jornada — quanto mais alta, mais perto do onze ideal. Quem brilha, aparece aqui em cima." },
             ].map(({ title, emoji, key, sub }) => {
               const sorted = [...players].filter((p: any) => p[key] > 0).sort((a: any, b: any) => b[key] - a[key]);
               if (!sorted.length) return null;
