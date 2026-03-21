@@ -560,8 +560,8 @@ export default function SiteClient({
 
             {/* Stat bar sections */}
             {[
-              { title: "Assistências", emoji: "🎯", key: "a" },
-              { title: "Jogos Disputados", emoji: "🏟", key: "gp" },
+              { title: "Assistências", emoji: "🎯", key: "a", sub: undefined as string | undefined },
+              { title: "Jogos Disputados", emoji: "🏟", key: "gp", sub: undefined as string | undefined },
             ].map(({ title, emoji, key, sub }) => {
               const sorted = [...players].filter((p: any) => p[key] > 0).sort((a: any, b: any) => b[key] - a[key]);
               if (!sorted.length) return null;
