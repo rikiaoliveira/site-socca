@@ -35,6 +35,22 @@ export default function SiteClient({
   const [isMobile, setIsMobile] = useState(false);
 
   const [isIosChrome, setIsIosChrome] = useState(false);
+  const [matchSummary, setMatchSummary] = useState<any>(null);
+  const [loadingMatchId, setLoadingMatchId] = useState<number | null>(null);
+
+  async function openMatchSummary(matchId: number) {
+    if (!matchId) return;
+    setLoadingMatchId(matchId);
+    try {
+      const res = await fetch(`/api/match/${matchId}`);
+      const data = await res.json();
+      setMatchSummary(data);
+    } catch {
+      setMatchSummary(null);
+    } finally {
+      setLoadingMatchId(null);
+    }
+  }
 
   useEffect(() => {
     const ua = navigator.userAgent;
@@ -433,25 +449,43 @@ export default function SiteClient({
                   <div className="font-display text-lg sm:text-xl tracking-wider text-gray-300 mb-2 flex items-center gap-2 w-fit bg-black/50 backdrop-blur-sm px-3 py-1 rounded-lg">
                     {m.day} <span className="font-body text-[11px] sm:text-xs font-medium text-gray-300 tracking-normal bg-black/50 backdrop-blur-sm px-2 py-0.5 rounded-md">{formatDate(m.date)}</span>
                   </div>
-                  <div className={`bg-black/60 backdrop-blur-md border border-white/10 rounded-xl p-3 sm:p-3.5 flex items-center gap-2.5 sm:gap-3.5 transition-colors hover:border-gold/20 ${isGalaxy ? "border-l-[3px] border-l-gold" : ""}`}>
-                    <div className={`result-badge ${result || "tbd"} shrink-0`}>
-                      {result === "win" ? "V" : result === "loss" ? "D" : result === "draw" ? "E" : "—"}
-                    </div>
-                    <div className="flex-1 flex items-center gap-1.5 sm:gap-2.5 min-w-0">
-                      <div className={`flex-1 flex items-center gap-1.5 sm:gap-2 font-semibold text-xs sm:text-sm min-w-0 ${m.h === TEAM_ID ? "text-gold" : ""}`}>
-                        <img src={teamImg(m.homeLogo)} alt="" className="w-5 h-5 sm:w-6 sm:h-6 rounded-md object-cover shrink-0 hidden sm:block" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
-                        <span className="truncate">{m.homeName}</span>
+                  <div className={`bg-black/60 backdrop-blur-md border border-white/10 rounded-xl p-3 sm:p-3.5 flex flex-col gap-2 transition-colors hover:border-gold/20 ${isGalaxy ? "border-l-[3px] border-l-gold" : ""}`}>
+                    <div className="flex items-center gap-2.5 sm:gap-3.5">
+                      <div className={`result-badge ${result || "tbd"} shrink-0`}>
+                        {result === "win" ? "V" : result === "loss" ? "D" : result === "draw" ? "E" : "—"}
                       </div>
-                      {played ? (
-                        <div className="font-display text-xl sm:text-2xl tracking-widest min-w-[50px] sm:min-w-[70px] text-center shrink-0">
-                          {m.hs}<span className="text-gray-500 text-base sm:text-lg mx-0.5 sm:mx-1">–</span>{m.as}
+                      <div className="flex-1 flex items-center gap-1.5 sm:gap-2.5 min-w-0">
+                        <div className={`flex-1 flex items-center gap-1.5 sm:gap-2 font-semibold text-xs sm:text-sm min-w-0 ${m.h === TEAM_ID ? "text-gold" : ""}`}>
+                          <img src={teamImg(m.homeLogo)} alt="" className="w-5 h-5 sm:w-6 sm:h-6 rounded-md object-cover shrink-0 hidden sm:block" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                          <span className="truncate">{m.homeName}</span>
                         </div>
-                      ) : (
-                        <div className="text-[11px] sm:text-[13px] text-gray-300 font-medium min-w-[50px] sm:min-w-[70px] text-center shrink-0">Por jogar</div>
-                      )}
-                      <div className={`flex-1 flex items-center gap-1.5 sm:gap-2 justify-end font-semibold text-xs sm:text-sm min-w-0 ${m.a === TEAM_ID ? "text-gold" : ""}`}>
-                        <span className="truncate">{m.awayName}</span>
-                        <img src={teamImg(m.awayLogo)} alt="" className="w-5 h-5 sm:w-6 sm:h-6 rounded-md object-cover shrink-0 hidden sm:block" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                        <div className="flex flex-col items-center shrink-0 gap-1">
+                          {played ? (
+                            <div className="font-display text-xl sm:text-2xl tracking-widest min-w-[50px] sm:min-w-[70px] text-center">
+                              {m.hs}<span className="text-gray-500 text-base sm:text-lg mx-0.5 sm:mx-1">–</span>{m.as}
+                            </div>
+                          ) : (
+                            <div className="text-[11px] sm:text-[13px] text-gray-300 font-medium min-w-[50px] sm:min-w-[70px] text-center">Por jogar</div>
+                          )}
+                          {played && m.id && (
+                            <button
+                              onClick={() => openMatchSummary(m.id)}
+                              disabled={loadingMatchId === m.id}
+                              className="flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-white/5 border border-white/10 text-gray-400 text-[10px] font-semibold uppercase tracking-wider hover:bg-gold/10 hover:border-gold/30 hover:text-gold transition-all disabled:opacity-50"
+                            >
+                              {loadingMatchId === m.id ? (
+                                <svg className="animate-spin" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10" strokeOpacity="0.3"/><path d="M12 2a10 10 0 0 1 10 10"/></svg>
+                              ) : (
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+                              )}
+                              Resumo
+                            </button>
+                          )}
+                        </div>
+                        <div className={`flex-1 flex items-center gap-1.5 sm:gap-2 justify-end font-semibold text-xs sm:text-sm min-w-0 ${m.a === TEAM_ID ? "text-gold" : ""}`}>
+                          <span className="truncate">{m.awayName}</span>
+                          <img src={teamImg(m.awayLogo)} alt="" className="w-5 h-5 sm:w-6 sm:h-6 rounded-md object-cover shrink-0 hidden sm:block" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -620,6 +654,279 @@ export default function SiteClient({
         )}
       </main>
       </div>
+
+      {/* ═══ MATCH SUMMARY MODAL ═══ */}
+      {matchSummary && (() => {
+        const ms = matchSummary;
+        const homeIsGalaxy = ms.idHomeTeam === TEAM_ID;
+        const awayIsGalaxy = ms.idVisitorTeam === TEAM_ID;
+        const galaxyPlayers: any[] = homeIsGalaxy ? (ms.homePlayers || []) : awayIsGalaxy ? (ms.visitorPlayers || []) : [];
+        const oppPlayers: any[] = homeIsGalaxy ? (ms.visitorPlayers || []) : (ms.homePlayers || []);
+        const allPlayers = [...(ms.homePlayers || []), ...(ms.visitorPlayers || [])];
+
+        // Player lookup by matchData.idPlayer
+        const playerMap: Record<number, { name: string; surname: string; teamId: number }> = {};
+        allPlayers.forEach((p: any) => {
+          if (p.matchData?.idPlayer) {
+            playerMap[p.matchData.idPlayer] = { name: p.name || "", surname: p.surname || "", teamId: p.matchData.idTeam };
+          }
+        });
+
+        const scorers = galaxyPlayers
+          .filter((p: any) => (p.dayResultSummary?.points || 0) > 0)
+          .sort((a: any, b: any) => (b.dayResultSummary?.points || 0) - (a.dayResultSummary?.points || 0));
+
+        const assisters = galaxyPlayers
+          .filter((p: any) => (p.dayResultSummary?.assistances || 0) > 0)
+          .sort((a: any, b: any) => (b.dayResultSummary?.assistances || 0) - (a.dayResultSummary?.assistances || 0));
+
+        const lineup = galaxyPlayers
+          .filter((p: any) => p.matchData?.status === 1)
+          .sort((a: any, b: any) => (a.teamData?.apparelNumber || 99) - (b.teamData?.apparelNumber || 99));
+
+        const oppScorers = oppPlayers
+          .filter((p: any) => (p.dayResultSummary?.points || 0) > 0)
+          .sort((a: any, b: any) => (b.dayResultSummary?.points || 0) - (a.dayResultSummary?.points || 0));
+
+        const homeName = ms.homeTeam?.name || "";
+        const awayName = ms.visitorTeam?.name || "";
+        const homeLogo = ms.homeTeam?.logoImgUrl || "";
+        const awayLogo = ms.visitorTeam?.logoImgUrl || "";
+
+        // Build timeline events (chronological order)
+        // type 31 = GOAL, type 30 = ASSIST, type 61 = YELLOW CARD, type 70 = MVP
+        const relevantTypes = new Set([1, 30, 31, 61, 70, 100]);
+        const chronoEvents = [...(ms.events || [])]
+          .filter((e: any) => relevantTypes.has(e.type))
+          .reverse(); // API returns newest first
+
+        // Inject halftime divider when part changes 1→2
+        const timelineItems: any[] = [];
+        let lastPart = 1;
+        chronoEvents.forEach((e: any) => {
+          if (e.part === 2 && lastPart === 1) {
+            timelineItems.push({ _divider: "halftime" });
+            lastPart = 2;
+          }
+          timelineItems.push(e);
+        });
+
+        function renderEvent(e: any, idx: number) {
+          if (e._divider === "halftime") return (
+            <div key={idx} className="flex items-center gap-2 py-1.5">
+              <div className="flex-1 h-px bg-white/10" />
+              <span className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">Intervalo</span>
+              <div className="flex-1 h-px bg-white/10" />
+            </div>
+          );
+
+          const isGalaxy = e.idTeam === TEAM_ID;
+          const player = e.idPlayer > 0 ? playerMap[e.idPlayer] : null;
+          const playerName = player ? `${player.name} ${player.surname}`.trim() : null;
+          const min = `${e.matchMinute}'`;
+
+          // GOAL
+          if (e.type === 31) {
+            return (
+              <div key={idx} className={`flex items-center gap-2 py-1 ${isGalaxy ? "" : "opacity-60"}`}>
+                {isGalaxy ? (
+                  <>
+                    <span className="text-[11px] text-gray-500 w-7 text-right font-mono shrink-0">{min}</span>
+                    <span className="text-base shrink-0">⚽</span>
+                    <span className="text-sm font-semibold text-gold truncate">{playerName || "—"}</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-sm font-semibold text-gray-300 ml-auto truncate">{playerName || "—"}</span>
+                    <span className="text-base shrink-0">⚽</span>
+                    <span className="text-[11px] text-gray-500 w-7 font-mono shrink-0">{min}</span>
+                  </>
+                )}
+              </div>
+            );
+          }
+
+          // ASSIST
+          if (e.type === 30) {
+            return (
+              <div key={idx} className={`flex items-center gap-2 py-0.5 ${isGalaxy ? "" : "opacity-60"}`}>
+                {isGalaxy ? (
+                  <>
+                    <span className="w-7 shrink-0" />
+                    <span className="text-sm shrink-0">👟</span>
+                    <span className="text-xs text-gray-400 truncate">{playerName || "—"}</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-xs text-gray-400 ml-auto truncate">{playerName || "—"}</span>
+                    <span className="text-sm shrink-0">👟</span>
+                    <span className="w-7 shrink-0" />
+                  </>
+                )}
+              </div>
+            );
+          }
+
+          // YELLOW CARD
+          if (e.type === 61) {
+            return (
+              <div key={idx} className={`flex items-center gap-2 py-1 ${isGalaxy ? "" : "opacity-70"}`}>
+                {isGalaxy ? (
+                  <>
+                    <span className="text-[11px] text-gray-500 w-7 text-right font-mono shrink-0">{min}</span>
+                    <span className="text-sm shrink-0">🟨</span>
+                    <span className="text-sm font-medium text-gray-200 truncate">{playerName || "—"}</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-sm font-medium text-gray-400 ml-auto truncate">{playerName || "—"}</span>
+                    <span className="text-sm shrink-0">🟨</span>
+                    <span className="text-[11px] text-gray-500 w-7 font-mono shrink-0">{min}</span>
+                  </>
+                )}
+              </div>
+            );
+          }
+
+          // MVP
+          if (e.type === 70) {
+            return (
+              <div key={idx} className={`flex items-center gap-2 py-1 ${isGalaxy ? "" : "opacity-70"}`}>
+                {isGalaxy ? (
+                  <>
+                    <span className="text-[11px] text-gray-500 w-7 text-right font-mono shrink-0">{min}</span>
+                    <span className="text-base shrink-0">👑</span>
+                    <span className="text-sm font-semibold text-gold truncate">{playerName || "—"}</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-sm font-semibold text-gray-300 ml-auto truncate">{playerName || "—"}</span>
+                    <span className="text-base shrink-0">👑</span>
+                    <span className="text-[11px] text-gray-500 w-7 font-mono shrink-0">{min}</span>
+                  </>
+                )}
+              </div>
+            );
+          }
+
+          return null;
+        }
+
+        return (
+          <div
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70 backdrop-blur-sm"
+            onClick={() => setMatchSummary(null)}
+          >
+            <div
+              className="bg-[#111113] border border-white/10 rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="sticky top-0 bg-[#111113] border-b border-white/10 px-5 pt-5 pb-4 z-10">
+                <div className="flex items-center gap-3 justify-center mb-1">
+                  <div className="flex items-center gap-2 flex-1 justify-end">
+                    <span className="text-sm font-semibold text-right leading-tight">{homeName}</span>
+                    <img src={teamImg(homeLogo)} alt="" className="w-8 h-8 rounded-lg object-cover shrink-0" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                  </div>
+                  <div className="font-display text-2xl tracking-widest shrink-0">
+                    {ms.homeScore}<span className="text-gray-500 mx-1.5">–</span>{ms.visitorScore}
+                  </div>
+                  <div className="flex items-center gap-2 flex-1">
+                    <img src={teamImg(awayLogo)} alt="" className="w-8 h-8 rounded-lg object-cover shrink-0" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                    <span className="text-sm font-semibold leading-tight">{awayName}</span>
+                  </div>
+                </div>
+                <div className="text-center text-[10px] text-gray-500 mt-1">{ms.day?.name} · {ms.field?.location}</div>
+                <button
+                  onClick={() => setMatchSummary(null)}
+                  className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors p-1"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                </button>
+              </div>
+
+              <div className="px-5 py-4 space-y-5">
+                {/* Timeline */}
+                {timelineItems.length > 0 && (
+                  <div>
+                    <div className="text-[11px] uppercase tracking-wider text-gray-500 font-semibold mb-2">Eventos</div>
+                    <div className="bg-black/30 rounded-xl border border-white/[0.06] px-3 py-2">
+                      {timelineItems.map((e: any, i: number) => renderEvent(e, i))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Scorers */}
+                {(scorers.length > 0 || oppScorers.length > 0) && (
+                  <div>
+                    <div className="text-[11px] uppercase tracking-wider text-gray-500 font-semibold mb-2">Marcadores</div>
+                    <div className="space-y-1.5">
+                      {scorers.map((p: any, i: number) => (
+                        <div key={i} className="flex items-center gap-2.5">
+                          <span className="text-gold text-sm">⚽</span>
+                          <span className="font-semibold text-sm text-gold">{p.name} {p.surname}</span>
+                          {(p.dayResultSummary?.points || 0) > 1 && (
+                            <span className="text-xs text-gray-500 bg-white/5 rounded px-1.5 py-0.5">×{p.dayResultSummary.points}</span>
+                          )}
+                        </div>
+                      ))}
+                      {oppScorers.map((p: any, i: number) => (
+                        <div key={i} className="flex items-center gap-2.5 opacity-60">
+                          <span className="text-gray-400 text-sm">⚽</span>
+                          <span className="font-semibold text-sm text-gray-300">{p.name} {p.surname}</span>
+                          {(p.dayResultSummary?.points || 0) > 1 && (
+                            <span className="text-xs text-gray-500 bg-white/5 rounded px-1.5 py-0.5">×{p.dayResultSummary.points}</span>
+                          )}
+                          <span className="text-[10px] text-gray-600 ml-auto">{homeIsGalaxy ? awayName : homeName}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Assists */}
+                {assisters.length > 0 && (
+                  <div>
+                    <div className="text-[11px] uppercase tracking-wider text-gray-500 font-semibold mb-2">Assistências</div>
+                    <div className="space-y-1.5">
+                      {assisters.map((p: any, i: number) => (
+                        <div key={i} className="flex items-center gap-2.5">
+                          <span className="text-sm">🎯</span>
+                          <span className="font-semibold text-sm text-white">{p.name} {p.surname}</span>
+                          {(p.dayResultSummary?.assistances || 0) > 1 && (
+                            <span className="text-xs text-gray-500 bg-white/5 rounded px-1.5 py-0.5">×{p.dayResultSummary.assistances}</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Lineup */}
+                {lineup.length > 0 && (
+                  <div>
+                    <div className="text-[11px] uppercase tracking-wider text-gray-500 font-semibold mb-2">Convocados — {homeIsGalaxy ? homeName : awayName}</div>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {lineup.map((p: any, i: number) => {
+                        const goals = p.dayResultSummary?.points || 0;
+                        const assists = p.dayResultSummary?.assistances || 0;
+                        return (
+                          <div key={i} className="flex items-center gap-2 bg-white/[0.03] border border-white/[0.06] rounded-lg px-2.5 py-2">
+                            <span className="text-[11px] text-gray-600 font-bold w-5 text-center">{p.teamData?.apparelNumber || "—"}</span>
+                            <span className="text-[12px] font-medium truncate flex-1">{p.name} {p.surname}</span>
+                            {goals > 0 && <span className="text-[10px] text-gold shrink-0">⚽{goals > 1 ? goals : ""}</span>}
+                            {assists > 0 && <span className="text-[10px] text-gray-400 shrink-0">🎯{assists > 1 ? assists : ""}</span>}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

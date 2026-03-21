@@ -80,6 +80,7 @@ export default async function Home() {
   const matches = (teamData.days || [])
     .flatMap((day: any) =>
       (day.matches || []).map((m: any) => ({
+        id: m.id,
         day: day.name,
         date: m.startTime,
         h: m.idHomeTeam,
