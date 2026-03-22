@@ -109,9 +109,21 @@ export default function SiteClient({
 
   async function handleNotifSubscribe() {
     const os = (window as any).OneSignal;
-    if (!os) return;
-    await os.User.PushSubscription.optIn();
-    setNotifState("subscribed");
+    if (!os) {
+      alert("OneSignal ainda não carregou. Espera uns segundos e tenta de novo.");
+      return;
+    }
+    try {
+      await os.User.PushSubscription.optIn();
+      const opted = await os.User?.PushSubscription?.optedIn;
+      if (opted) {
+        setNotifState("subscribed");
+      } else {
+        alert("Permissão não concedida. Verifica as definições do browser.");
+      }
+    } catch (e: any) {
+      alert("Erro: " + (e?.message || String(e)));
+    }
   }
 
   // Hero slideshow
