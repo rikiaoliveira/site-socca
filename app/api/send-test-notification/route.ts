@@ -15,8 +15,8 @@ export async function GET(req: NextRequest) {
     body: JSON.stringify({
       app_id: process.env.ONESIGNAL_APP_ID,
       included_segments: ["Total Subscriptions"],
-      headings: { pt: "🌟 MS Galaxy" },
-      contents: { pt: "A partir de agora vais receber notificações da nossa equipa. Força Galaxy! 💛" },
+      headings: { en: "💛 MS Galaxy" },
+      contents: { en: "A partir de agora vais receber notificações da nossa equipa. Força Galaxy! 💛" },
     }),
   });
 

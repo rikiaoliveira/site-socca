@@ -19,8 +19,8 @@ async function sendNotif(title: string, message: string) {
     body: JSON.stringify({
       app_id: process.env.ONESIGNAL_APP_ID,
       included_segments: ["Total Subscriptions"],
-      headings: { pt: title },
-      contents: { pt: message },
+      headings: { en: title },
+      contents: { en: message },
     }),
   });
 }
@@ -92,7 +92,7 @@ export async function GET(req: NextRequest) {
 
     let sent = 0;
     for (const e of newEvents) {
-      let title = "🏟️ MS Galaxy";
+      let title = "⚽ MS Galaxy";
       let message = "";
 
       const playerName = e.idPlayer > 0 ? playerMap[e.idPlayer] || null : null;

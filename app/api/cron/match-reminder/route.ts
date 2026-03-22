@@ -62,8 +62,8 @@ export async function GET(req: NextRequest) {
       body: JSON.stringify({
         app_id: process.env.ONESIGNAL_APP_ID,
         included_segments: ["Total Subscriptions"],
-        headings: { pt: "🏟️ Hoje é dia de jogo!" },
-        contents: { pt: `MS Galaxy vs ${opponent} às ${matchTime}. Vai lá!` },
+        headings: { en: "⚽ Hoje é dia de jogo!" },
+        contents: { en: `MS Galaxy vs ${opponent} às ${matchTime}. Vai lá!` },
       }),
     });
 
