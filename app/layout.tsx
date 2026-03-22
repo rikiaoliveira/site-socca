@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import OneSignalInit from "@/components/OneSignalInit";
 
 export const metadata: Metadata = {
   title: "MS Galaxy — Liga 2 Amora 2026",
@@ -21,7 +22,10 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="MS Galaxy" />
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        <OneSignalInit />
+      </body>
     </html>
   );
 }

@@ -37,6 +37,8 @@ export default function SiteClient({
   const [isIosChrome, setIsIosChrome] = useState(false);
   const [matchSummary, setMatchSummary] = useState<any>(null);
   const [loadingMatchId, setLoadingMatchId] = useState<number | null>(null);
+  const [notifState, setNotifState] = useState<"idle" | "subscribed" | "denied">("idle");
+  const [notifSupported, setNotifSupported] = useState(false);
 
   async function openMatchSummary(matchId: number) {
     if (!matchId) return;
@@ -69,7 +71,23 @@ export default function SiteClient({
 
     const handler = (e: any) => { e.preventDefault(); setInstallPrompt(e); };
     window.addEventListener("beforeinstallprompt", handler);
-    return () => window.removeEventListener("beforeinstallprompt", handler);
+
+    // Check OneSignal subscription state after it loads
+    const checkNotif = setTimeout(async () => {
+      if (!("Notification" in window)) return;
+      if (Notification.permission === "denied") { setNotifState("denied"); setNotifSupported(true); return; }
+      setNotifSupported(true);
+      const os = (window as any).OneSignal;
+      if (os) {
+        const opted = await os.User?.PushSubscription?.optedIn;
+        if (opted) setNotifState("subscribed");
+      }
+    }, 2500);
+
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handler);
+      clearTimeout(checkNotif);
+    };
   }, []);
 
   function goToPage(p: string) {
@@ -87,6 +105,13 @@ export default function SiteClient({
     } else if (isChrome) {
       setShowChromeHint(true);
     }
+  }
+
+  async function handleNotifSubscribe() {
+    const os = (window as any).OneSignal;
+    if (!os) return;
+    await os.User.PushSubscription.optIn();
+    setNotifState("subscribed");
   }
 
   // Hero slideshow
@@ -163,16 +188,40 @@ export default function SiteClient({
             ))}
           </nav>
 
-          {/* Install button */}
-          {(installPrompt || isIos || isChrome) && (
-            <button
-              onClick={handleInstall}
-              className="mt-5 flex items-center gap-2 px-4 py-2 rounded-xl bg-gold/10 border border-gold/30 text-gold text-xs font-semibold backdrop-blur-sm transition-all hover:bg-gold/20"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 2v13M7 10l5 5 5-5"/><path d="M5 20h14"/></svg>
-              Adicionar ao ecrã inicial
-            </button>
-          )}
+          {/* Install + Notif buttons */}
+          <div className="flex flex-col gap-2 items-center mt-5">
+            {(installPrompt || isIos || isChrome) && (
+              <button
+                onClick={handleInstall}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gold/10 border border-gold/30 text-gold text-xs font-semibold backdrop-blur-sm transition-all hover:bg-gold/20"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 2v13M7 10l5 5 5-5"/><path d="M5 20h14"/></svg>
+                Adicionar ao ecrã inicial
+              </button>
+            )}
+            {notifSupported && notifState !== "denied" && (
+              <button
+                onClick={notifState === "subscribed" ? undefined : handleNotifSubscribe}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl border text-xs font-semibold backdrop-blur-sm transition-all ${
+                  notifState === "subscribed"
+                    ? "bg-green-500/10 border-green-500/30 text-green-400 cursor-default"
+                    : "bg-white/5 border-white/15 text-white hover:bg-white/10"
+                }`}
+              >
+                {notifState === "subscribed" ? (
+                  <>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+                    Notificações ativas
+                  </>
+                ) : (
+                  <>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                    Ativar notificações
+                  </>
+                )}
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Chrome hint modal */}
