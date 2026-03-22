@@ -14,7 +14,6 @@ export default function OneSignalInit() {
     window.OneSignalDeferred.push(async function (OneSignal: any) {
       await OneSignal.init({
         appId: "b70baff3-2e8b-4292-bae8-5b69f503d29b",
-        serviceWorkerPath: "/sw.js",
         notifyButton: { enable: false },
       });
     });
