@@ -78,6 +78,7 @@ body {
 .result-badge.loss { background: rgba(239,68,68,0.15); color: var(--red); }
 .result-badge.draw { background: rgba(163,163,163,0.15); color: #a3a3a3; }
 .result-badge.tbd { background: rgba(255,255,255,0.05); color: var(--text-dim); }
+.result-badge.live { background: rgba(239,68,68,0.15); color: #f87171; }
 
 /* Hero */
 .hero-slide {

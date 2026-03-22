@@ -37,22 +37,37 @@ export default function SiteClient({
   const [isIosChrome, setIsIosChrome] = useState(false);
   const [matchSummary, setMatchSummary] = useState<any>(null);
   const [loadingMatchId, setLoadingMatchId] = useState<number | null>(null);
+  const [liveMatchId, setLiveMatchId] = useState<number | null>(null);
   const [notifState, setNotifState] = useState<"idle" | "subscribed" | "denied">("idle");
   const [notifSupported, setNotifSupported] = useState(false);
 
-  async function openMatchSummary(matchId: number) {
+  async function openMatchSummary(matchId: number, isLive = false) {
     if (!matchId) return;
     setLoadingMatchId(matchId);
     try {
       const res = await fetch(`/api/match/${matchId}`);
       const data = await res.json();
       setMatchSummary(data);
+      setLiveMatchId(isLive ? matchId : null);
     } catch {
       setMatchSummary(null);
     } finally {
       setLoadingMatchId(null);
     }
   }
+
+  // Auto-refresh do modal quando jogo está ao vivo
+  useEffect(() => {
+    if (!liveMatchId) return;
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/match/${liveMatchId}`);
+        const data = await res.json();
+        setMatchSummary(data);
+      } catch {}
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [liveMatchId]);
 
   useEffect(() => {
     const ua = navigator.userAgent;
@@ -200,8 +215,13 @@ export default function SiteClient({
             ))}
           </nav>
 
+          {/* Dica de instalação */}
+          <p className="mt-6 max-w-[280px] sm:max-w-xs text-center text-[11px] text-gray-500 leading-relaxed bg-black/40 backdrop-blur-sm px-4 py-2.5 rounded-xl border border-white/[0.06]">
+            💡 Para não perderes nada, adiciona a app ao teu ecrã inicial e ativa as notificações. Podes acompanhar o jogo ao vivo!
+          </p>
+
           {/* Install + Notif buttons */}
-          <div className="flex flex-col gap-2 items-center mt-5">
+          <div className="flex flex-col gap-2 items-center mt-3">
             {(installPrompt || isIos || isChrome) && (
               <button
                 onClick={handleInstall}
@@ -505,15 +525,28 @@ export default function SiteClient({
               const played = m.st === 5;
               const result = getMatchResult(m);
               const isGalaxy = m.h === TEAM_ID || m.a === TEAM_ID;
+              const now = Date.now();
+              const kickoff = new Date(m.date).getTime();
+              const isLive = !played && kickoff <= now && (now - kickoff) < 90 * 60000;
               return (
                 <div key={i} className="mb-4 sm:mb-6">
                   <div className="font-display text-lg sm:text-xl tracking-wider text-gray-300 mb-2 flex items-center gap-2 w-fit bg-black/50 backdrop-blur-sm px-3 py-1 rounded-lg">
                     {m.day} <span className="font-body text-[11px] sm:text-xs font-medium text-gray-300 tracking-normal bg-black/50 backdrop-blur-sm px-2 py-0.5 rounded-md">{formatDate(m.date)}</span>
+                    {isLive && (
+                      <span className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-red-500/20 border border-red-500/40 text-red-400 text-[10px] font-bold uppercase tracking-wider">
+                        <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
+                        Ao vivo
+                      </span>
+                    )}
                   </div>
-                  <div className={`bg-black/60 backdrop-blur-md border border-white/10 rounded-xl p-3 sm:p-3.5 flex flex-col gap-2 transition-colors hover:border-gold/20 ${isGalaxy ? "border-l-[3px] border-l-gold" : ""}`}>
+                  <div className={`bg-black/60 backdrop-blur-md border rounded-xl p-3 sm:p-3.5 flex flex-col gap-2 transition-colors ${
+                    isLive
+                      ? "border-red-500/50 shadow-[0_0_20px_rgba(239,68,68,0.15)]"
+                      : `border-white/10 hover:border-gold/20 ${isGalaxy ? "border-l-[3px] border-l-gold" : ""}`
+                  }`}>
                     <div className="flex items-center gap-2.5 sm:gap-3.5">
-                      <div className={`result-badge ${result || "tbd"} shrink-0`}>
-                        {result === "win" ? "V" : result === "loss" ? "D" : result === "draw" ? "E" : "—"}
+                      <div className={`result-badge ${isLive ? "live" : result || "tbd"} shrink-0`}>
+                        {isLive ? "▶" : result === "win" ? "V" : result === "loss" ? "D" : result === "draw" ? "E" : "—"}
                       </div>
                       <div className="flex-1 flex items-center gap-1.5 sm:gap-2.5 min-w-0">
                         <div className={`flex-1 flex items-center gap-1.5 sm:gap-2 font-semibold text-xs sm:text-sm min-w-0 ${m.h === TEAM_ID ? "text-gold" : ""}`}>
@@ -525,21 +558,31 @@ export default function SiteClient({
                             <div className="font-display text-xl sm:text-2xl tracking-widest min-w-[50px] sm:min-w-[70px] text-center">
                               {m.hs}<span className="text-gray-500 text-base sm:text-lg mx-0.5 sm:mx-1">–</span>{m.as}
                             </div>
+                          ) : isLive ? (
+                            <div className="font-display text-xl sm:text-2xl tracking-widest min-w-[50px] sm:min-w-[70px] text-center text-red-400">
+                              {m.hs}<span className="text-red-600 text-base sm:text-lg mx-0.5 sm:mx-1">–</span>{m.as}
+                            </div>
                           ) : (
                             <div className="text-[11px] sm:text-[13px] text-gray-300 font-medium min-w-[50px] sm:min-w-[70px] text-center">Por jogar</div>
                           )}
-                          {played && m.id && (
+                          {(played || isLive) && m.id && (
                             <button
-                              onClick={() => openMatchSummary(m.id)}
+                              onClick={() => openMatchSummary(m.id, isLive)}
                               disabled={loadingMatchId === m.id}
-                              className="flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-white/5 border border-white/10 text-gray-400 text-[10px] font-semibold uppercase tracking-wider hover:bg-gold/10 hover:border-gold/30 hover:text-gold transition-all disabled:opacity-50"
+                              className={`flex items-center gap-1 px-2.5 py-0.5 rounded-md border text-[10px] font-semibold uppercase tracking-wider transition-all disabled:opacity-50 ${
+                                isLive
+                                  ? "bg-red-500/10 border-red-500/30 text-red-400 hover:bg-red-500/20"
+                                  : "bg-white/5 border-white/10 text-gray-400 hover:bg-gold/10 hover:border-gold/30 hover:text-gold"
+                              }`}
                             >
                               {loadingMatchId === m.id ? (
                                 <svg className="animate-spin" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10" strokeOpacity="0.3"/><path d="M12 2a10 10 0 0 1 10 10"/></svg>
+                              ) : isLive ? (
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="6"/></svg>
                               ) : (
                                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
                               )}
-                              Resumo
+                              {isLive ? "Acompanhar" : "Resumo"}
                             </button>
                           )}
                         </div>
@@ -875,7 +918,7 @@ export default function SiteClient({
         return (
           <div
             className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70 backdrop-blur-sm"
-            onClick={() => setMatchSummary(null)}
+            onClick={() => { setMatchSummary(null); setLiveMatchId(null); }}
           >
             <div
               className="bg-[#111113] border border-white/10 rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md max-h-[90vh] overflow-y-auto"
@@ -898,7 +941,7 @@ export default function SiteClient({
                 </div>
                 <div className="text-center text-[10px] text-gray-500 mt-1">{ms.day?.name} · {ms.field?.location}</div>
                 <button
-                  onClick={() => setMatchSummary(null)}
+                  onClick={() => { setMatchSummary(null); setLiveMatchId(null); }}
                   className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors p-1"
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
@@ -951,7 +994,7 @@ export default function SiteClient({
                     <div className="space-y-1.5">
                       {assisters.map((p: any, i: number) => (
                         <div key={i} className="flex items-center gap-2.5">
-                          <span className="text-sm">🎯</span>
+                          <span className="text-sm">👟</span>
                           <span className="font-semibold text-sm text-white">{p.name} {p.surname}</span>
                           {(p.dayResultSummary?.assistances || 0) > 1 && (
                             <span className="text-xs text-gray-500 bg-white/5 rounded px-1.5 py-0.5">×{p.dayResultSummary.assistances}</span>
@@ -975,7 +1018,7 @@ export default function SiteClient({
                             <span className="text-[11px] text-gray-600 font-bold w-5 text-center">{p.teamData?.apparelNumber || "—"}</span>
                             <span className="text-[12px] font-medium truncate flex-1">{p.name} {p.surname}</span>
                             {goals > 0 && <span className="text-[10px] text-gold shrink-0">⚽{goals > 1 ? goals : ""}</span>}
-                            {assists > 0 && <span className="text-[10px] text-gray-400 shrink-0">🎯{assists > 1 ? assists : ""}</span>}
+                            {assists > 0 && <span className="text-[10px] text-gray-400 shrink-0">👟{assists > 1 ? assists : ""}</span>}
                           </div>
                         );
                       })}
