@@ -213,7 +213,7 @@ export default function SiteClient({
             )}
             {notifSupported && notifState !== "denied" && (
               <button
-                onClick={notifState === "subscribed" ? undefined : handleNotifSubscribe}
+                onClick={() => { alert("btn clicado, state: " + notifState); if (notifState !== "subscribed") handleNotifSubscribe(); }}
                 className={`flex items-center gap-2 px-4 py-2 rounded-xl border text-xs font-semibold backdrop-blur-sm transition-all ${
                   notifState === "subscribed"
                     ? "bg-green-500/10 border-green-500/30 text-green-400 cursor-default"
