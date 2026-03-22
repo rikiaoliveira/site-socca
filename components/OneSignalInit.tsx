@@ -13,7 +13,7 @@ export default function OneSignalInit() {
     window.OneSignalDeferred = window.OneSignalDeferred || [];
     window.OneSignalDeferred.push(async function (OneSignal: any) {
       await OneSignal.init({
-        appId: "b70baff3-2e8b-4292-bae8-5b69f503d29b",
+        appId: "decb3977-7e1e-4c49-a9a8-974de37e3d1c",
         notifyButton: { enable: false },
       });
     });
