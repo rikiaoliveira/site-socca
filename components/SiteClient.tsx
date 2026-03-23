@@ -40,6 +40,8 @@ export default function SiteClient({
   const [liveMatchId, setLiveMatchId] = useState<number | null>(null);
   const [notifState, setNotifState] = useState<"idle" | "subscribed" | "denied">("idle");
   const [notifSupported, setNotifSupported] = useState(false);
+  const [liveMatchData, setLiveMatchData] = useState<Record<number, any>>({});
+  const [notifHistory, setNotifHistory] = useState<any[]>([]);
 
   async function openMatchSummary(matchId: number, isLive = false) {
     if (!matchId) return;
@@ -68,6 +70,31 @@ export default function SiteClient({
     }, 30000);
     return () => clearInterval(interval);
   }, [liveMatchId]);
+
+  // Polling do resultado no calendário durante janela do jogo
+  useEffect(() => {
+    const now = Date.now();
+    const windowMatches = matches.filter((m: any) => {
+      if (m.st === 5) return false;
+      const kickoff = new Date(m.date).getTime();
+      return kickoff - 15 * 60000 <= now && now <= kickoff + 120 * 60000;
+    });
+    if (windowMatches.length === 0) return;
+
+    async function fetchAll() {
+      for (const m of windowMatches) {
+        try {
+          const res = await fetch(`/api/match/${m.id}`);
+          const data = await res.json();
+          setLiveMatchData(prev => ({ ...prev, [m.id]: data }));
+        } catch {}
+      }
+    }
+
+    fetchAll();
+    const interval = setInterval(fetchAll, 30000);
+    return () => clearInterval(interval);
+  }, [matches]);
 
   useEffect(() => {
     const ua = navigator.userAgent;
@@ -109,6 +136,31 @@ export default function SiteClient({
     setBgPhoto(BG_PHOTOS[Math.floor(Math.random() * BG_PHOTOS.length)]);
     setPage(p);
   }
+
+  // Deep-link: ao abrir via notificação, navega para a página/jogo indicado na URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const targetPage = params.get("page");
+    const matchId = params.get("match");
+    if (targetPage) {
+      goToPage(targetPage);
+      if (matchId) {
+        const id = Number(matchId);
+        if (id) openMatchSummary(id, true);
+      }
+      // Limpar os params da URL sem recarregar a página
+      const cleanUrl = window.location.pathname;
+      window.history.replaceState({}, "", cleanUrl);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (page !== "notificacoes") return;
+    fetch("/api/notifications")
+      .then((r) => r.json())
+      .then((data) => setNotifHistory(Array.isArray(data) ? data : []))
+      .catch(() => setNotifHistory([]));
+  }, [page]);
 
   async function handleInstall() {
     if (installPrompt) {
@@ -338,8 +390,18 @@ export default function SiteClient({
             <span className="text-[10px] sm:text-[11px] text-gray-500 hidden sm:inline">{competitionName} — Época 2026</span>
           </div>
           <button
+            onClick={() => goToPage("notificacoes")}
+            className="ml-auto p-2 text-gray-400 hover:text-gold transition-colors shrink-0"
+            title="Notificações"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+          </button>
+          <button
             onClick={() => setPage(null)}
-            className="ml-auto text-xs text-gray-400 border border-border rounded-lg px-2.5 sm:px-3.5 py-1.5 hover:border-gold hover:text-gold transition-all whitespace-nowrap shrink-0"
+            className="text-xs text-gray-400 border border-border rounded-lg px-2.5 sm:px-3.5 py-1.5 hover:border-gold hover:text-gold transition-all whitespace-nowrap shrink-0"
           >
             ← Início
           </button>
@@ -527,7 +589,14 @@ export default function SiteClient({
               const isGalaxy = m.h === TEAM_ID || m.a === TEAM_ID;
               const now = Date.now();
               const kickoff = new Date(m.date).getTime();
-              const isLive = !played && kickoff <= now && (now - kickoff) < 90 * 60000;
+              const inWindow = !played && kickoff - 15 * 60000 <= now && now <= kickoff + 120 * 60000;
+              const liveData = inWindow ? liveMatchData[m.id] : null;
+              const events: any[] = liveData?.events || [];
+              const matchStarted = events.some((e: any) => e.type === 1);
+              const matchEnded = events.some((e: any) => e.type === 13);
+              const isLive = inWindow && matchStarted && !matchEnded;
+              const displayHs = liveData?.homeScore != null ? liveData.homeScore : m.hs;
+              const displayAs = liveData?.visitorScore != null ? liveData.visitorScore : m.as;
               return (
                 <div key={i} className="mb-4 sm:mb-6">
                   <div className="font-display text-lg sm:text-xl tracking-wider text-gray-300 mb-2 flex items-center gap-2 w-fit bg-black/50 backdrop-blur-sm px-3 py-1 rounded-lg">
@@ -560,7 +629,7 @@ export default function SiteClient({
                             </div>
                           ) : isLive ? (
                             <div className="font-display text-xl sm:text-2xl tracking-widest min-w-[50px] sm:min-w-[70px] text-center text-red-400">
-                              {m.hs}<span className="text-red-600 text-base sm:text-lg mx-0.5 sm:mx-1">–</span>{m.as}
+                              {displayHs}<span className="text-red-600 text-base sm:text-lg mx-0.5 sm:mx-1">–</span>{displayAs}
                             </div>
                           ) : (
                             <div className="text-[11px] sm:text-[13px] text-gray-300 font-medium min-w-[50px] sm:min-w-[70px] text-center">Por jogar</div>
@@ -755,6 +824,60 @@ export default function SiteClient({
             )}
           </>
         )}
+        {/* ═══ NOTIFICAÇÕES ═══ */}
+        {page === "notificacoes" && (
+          <>
+            <h2 className="font-display text-3xl tracking-widest mb-5" style={{ textShadow: "0 2px 12px rgba(0,0,0,0.9)" }}>Notificações</h2>
+            <div className="glow-line" />
+            {notifHistory.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 text-center">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-600 mb-4">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>
+                <p className="text-gray-500 text-sm">Sem notificações ainda</p>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {notifHistory.map((n: any, i: number) => {
+                  const date = new Date(n.timestamp);
+                  const now = Date.now();
+                  const diffMin = Math.floor((now - n.timestamp) / 60000);
+                  const timeLabel =
+                    diffMin < 1 ? "agora"
+                    : diffMin < 60 ? `há ${diffMin}min`
+                    : diffMin < 1440 ? `há ${Math.floor(diffMin / 60)}h`
+                    : `${date.getDate()}/${date.getMonth() + 1} ${String(date.getHours()).padStart(2,"0")}:${String(date.getMinutes()).padStart(2,"0")}`;
+                  return (
+                    <div
+                      key={i}
+                      onClick={() => n.matchId ? openMatchSummary(n.matchId, false) : undefined}
+                      className={`bg-black/50 backdrop-blur-md border border-white/10 rounded-xl p-4 flex items-start gap-3.5 ${n.matchId ? "cursor-pointer hover:border-gold/30 transition-colors" : ""}`}
+                    >
+                      <div className="shrink-0 w-8 h-8 rounded-full bg-gold/10 border border-gold/20 flex items-center justify-center mt-0.5">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gold">
+                          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                        </svg>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-baseline justify-between gap-2 mb-0.5">
+                          <span className="font-semibold text-sm text-white truncate">{n.title}</span>
+                          <span className="text-[11px] text-gray-500 shrink-0">{timeLabel}</span>
+                        </div>
+                        <p className="text-[13px] text-gray-400 leading-snug">{n.message}</p>
+                        {n.matchId && (
+                          <span className="inline-block mt-1.5 text-[10px] text-gold/70 uppercase tracking-wider">Ver ficha do jogo →</span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </>
+        )}
+
       </main>
       </div>
 

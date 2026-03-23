@@ -9,7 +9,10 @@ const redis = new Redis({
 
 const BASE = "https://soccaportugal.mygol.es/api";
 
-async function sendNotif(title: string, message: string) {
+async function sendNotif(title: string, message: string, matchId: number, redis: Redis) {
+  const siteUrl = process.env.SITE_URL || "https://msgalaxy.vercel.app";
+  const url = `${siteUrl}/?page=calendario&match=${matchId}`;
+
   await fetch("https://onesignal.com/api/v1/notifications", {
     method: "POST",
     headers: {
@@ -21,8 +24,14 @@ async function sendNotif(title: string, message: string) {
       included_segments: ["Total Subscriptions"],
       headings: { en: title },
       contents: { en: message },
+      url,
     }),
   });
+
+  // Guardar no histórico (máx 30)
+  const entry = JSON.stringify({ title, message, timestamp: Date.now(), matchId });
+  await redis.lpush("notifications:history", entry);
+  await redis.ltrim("notifications:history", 0, 29);
 }
 
 export async function GET(req: NextRequest) {
@@ -143,7 +152,7 @@ export async function GET(req: NextRequest) {
       }
 
       if (message) {
-        await sendNotif(title, message);
+        await sendNotif(title, message, todayMatch.id, redis);
         notifiedSet.add(e.id);
         sent++;
       }

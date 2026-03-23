@@ -5,7 +5,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
   try {
     const res = await fetch(`https://soccaportugal.mygol.es/api/matches/${id}`, {
       headers: { Accept: "application/json" },
-      next: { revalidate: 60 },
+      cache: "no-store",
     });
     if (!res.ok) return NextResponse.json({ error: "API error" }, { status: res.status });
     const data = await res.json();

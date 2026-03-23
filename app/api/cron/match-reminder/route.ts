@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Redis } from "@upstash/redis";
 import { TEAM_ID } from "@/lib/api";
+
+const redis = new Redis({
+  url: process.env.KV_REST_API_URL!,
+  token: process.env.KV_REST_API_TOKEN!,
+});
 
 const BASE = "https://soccaportugal.mygol.es/api";
 
@@ -52,6 +58,10 @@ export async function GET(req: NextRequest) {
       timeZone: "Europe/Lisbon",
     }).format(new Date(todayMatch.startTime));
 
+    const siteUrl = process.env.SITE_URL || "https://msgalaxy.vercel.app";
+    const title = "⚽ Hoje é dia de jogo!";
+    const message = `MS Galaxy vs ${opponent} às ${matchTime}. Vai lá!`;
+
     // Send OneSignal notification to all subscribers
     const notifRes = await fetch("https://onesignal.com/api/v1/notifications", {
       method: "POST",
@@ -62,10 +72,16 @@ export async function GET(req: NextRequest) {
       body: JSON.stringify({
         app_id: process.env.ONESIGNAL_APP_ID,
         included_segments: ["Total Subscriptions"],
-        headings: { en: "⚽ Hoje é dia de jogo!" },
-        contents: { en: `MS Galaxy vs ${opponent} às ${matchTime}. Vai lá!` },
+        headings: { en: title },
+        contents: { en: message },
+        url: `${siteUrl}/?page=notificacoes`,
       }),
     });
+
+    // Guardar no histórico (máx 30)
+    const entry = JSON.stringify({ title, message, timestamp: Date.now() });
+    await redis.lpush("notifications:history", entry);
+    await redis.ltrim("notifications:history", 0, 29);
 
     const result = await notifRes.json();
     return NextResponse.json({ sent: true, match: `MS Galaxy vs ${opponent} ${matchTime}`, result });
