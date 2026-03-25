@@ -11,6 +11,37 @@ const POS_NAMES: Record<number, string> = {
   12: "AV",
 };
 
+const PLAYER_PHOTOS: Record<string, string> = {
+  "jorgerolo": "/players/jorgerolo.jpg",
+  "rubenleston": "/players/rubenleston.jpg",
+  "gabrielrodrigues": "/players/gabrielrodrigues.jpg",
+  "emanueltavares": "/players/emanueltavares.jpg",
+  "pedrooliveira": "/players/pedrooliveira.jpg",
+  "joaogoncalves": "/players/joaogoncalves.jpg",
+  "tiagocarvalho": "/players/tiagocarvalho.jpg",
+  "joaoalves": "/players/joaoalves.jpg",
+  "andreporfirio": "/players/andreporfirio.jpg",
+  "rodrigogarcia": "/players/rodrigogarcia.jpg",
+  "guilhermebaroseiro": "/players/guilhermebaroseiro.jpg",
+  "bernardosilva": "/players/bernardosilva.jpg",
+  "bernardogoncalves": "/players/bernardogoncalves.jpg",
+  "derisonassuncao": "/players/derison.jpg",
+  "reynandasilva": "/players/reynan.png",
+  "ricardooliveira": "/players/ricardooliveira.jpg",
+  "diogoribeiro": "/players/diogoribeiro.jpg",
+  "guilhermepernas": "/players/pernas.jpg",
+  "guilhermegarcia": "/players/guilhermegarcia.jpg",
+};
+
+function playerPhotoSrc(name: string, sur: string, apiPhoto: string): string {
+  const key = (name + sur)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, "");
+  return PLAYER_PHOTOS[key] || apiPhoto;
+}
+
 function formatDate(dateStr: string) {
   const d = new Date(dateStr);
   const days = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
@@ -674,27 +705,72 @@ export default function SiteClient({
             <h2 className="font-display text-3xl tracking-widest mb-5" style={{ textShadow: "0 2px 12px rgba(0,0,0,0.9)" }}>Plantel</h2>
             <p className="text-[13px] text-gray-300 -mt-3.5 mb-6 w-fit bg-black/50 backdrop-blur-sm px-3 py-1 rounded-lg">{teamName} — Época 2026</p>
             <div className="glow-line" />
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
               {[...players]
-                .sort((a: any, b: any) => b.gp - a.gp || b.dp - a.dp)
+                .sort((a: any, b: any) => b.dp - a.dp || b.g - a.g)
                 .map((p: any, i: number) => (
-                  <div key={i} className="bg-black/60 backdrop-blur-md border border-white/10 rounded-xl p-4 flex items-center gap-3.5 transition-all hover:border-gold/25 hover:-translate-y-px">
-                    <img
-                      src={teamImg(p.ph)}
-                      alt={`${p.name} ${p.sur}`}
-                      className="w-[50px] h-[50px] rounded-xl object-cover bg-surface2 border border-border"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).outerHTML = `<div class="w-[50px] h-[50px] rounded-xl bg-surface2 border border-border flex items-center justify-center font-display text-xl text-gold">${p.n}</div>`;
-                      }}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="font-bold text-sm">{p.name} {p.sur}</div>
-                      <div className="text-[11px] text-gray-500 uppercase tracking-wider">{POS_NAMES[p.pos] || "—"} · #{p.n}</div>
-                      <div className="flex gap-2 mt-2 flex-wrap">
-                        <span className="bg-surface2 rounded-md px-2 py-0.5 text-[11px] text-gray-500"><span className="font-bold text-white">{p.gp}</span> J</span>
-                        {p.g > 0 && <span className="bg-surface2 rounded-md px-2 py-0.5 text-[11px] text-gray-500"><span className="font-bold text-gold">{p.g}</span> Golos</span>}
-                        {p.a > 0 && <span className="bg-surface2 rounded-md px-2 py-0.5 text-[11px] text-gray-500"><span className="font-bold text-white">{p.a}</span> Ass</span>}
-                        {p.mvp > 0 && <span className="bg-surface2 rounded-md px-2 py-0.5 text-[11px] text-gray-500"><span className="font-bold text-gold">★</span> MVP</span>}
+                  <div key={i} className="group select-none">
+                    <div
+                      className="relative rounded-xl overflow-hidden transition-all duration-300 ease-out group-hover:-translate-y-2 group-hover:shadow-[0_20px_50px_rgba(0,0,0,0.8)]"
+                      style={{ aspectRatio: "3/4", background: "#111" }}
+                    >
+                      {/* foto a preencher tudo */}
+                      <img
+                        src={playerPhotoSrc(p.name, p.sur, teamImg(p.ph))}
+                        alt={`${p.name} ${p.sur}`}
+                        className="absolute inset-0 w-full h-full object-cover object-top"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                      />
+
+                      {/* fade escuro de baixo */}
+                      <div
+                        className="absolute inset-0 pointer-events-none"
+                        style={{ background: "linear-gradient(to bottom, transparent 35%, rgba(10,6,0,0.6) 62%, rgba(5,3,0,0.96) 100%)" }}
+                      />
+
+                      {/* brilho dourado subtil no topo */}
+                      <div
+                        className="absolute inset-0 pointer-events-none"
+                        style={{ background: "linear-gradient(160deg, rgba(212,170,60,0.10) 0%, transparent 40%)" }}
+                      />
+
+                      {/* borda dourada fina */}
+                      <div className="absolute inset-0 rounded-xl pointer-events-none" style={{ boxShadow: "inset 0 0 0 1px rgba(212,170,60,0.30)" }} />
+
+                      {/* nome e posição */}
+                      <div className="absolute bottom-0 inset-x-0 px-2.5 pb-2.5 text-center">
+                        <div
+                          className="font-display font-black uppercase tracking-[0.1em] leading-tight text-white text-center"
+                          style={{ fontSize: "clamp(10px,2.8vw,14px)", textShadow: "0 1px 8px rgba(0,0,0,0.9)" }}
+                        >
+                          <div className="truncate">{p.name}</div>
+                          {p.sur && <div className="truncate">{p.sur}</div>}
+                        </div>
+                        <div className="font-bold uppercase tracking-widest mt-0.5 text-gold/60" style={{ fontSize: "clamp(7px,1.6vw,9px)" }}>
+                          {POS_NAMES[p.pos] || "—"} · #{p.n}
+                        </div>
+                        {(p.g > 0 || p.a > 0 || p.mvp > 0) && (
+                          <div className="flex justify-center gap-1.5 mt-1.5 flex-wrap">
+                            {p.g > 0 && (
+                              <span className="flex items-center gap-0.5 bg-black/40 rounded px-1.5 py-0.5" style={{ fontSize: "clamp(7px,1.8vw,10px)" }}>
+                                <span className="text-gold font-black">{p.g}</span>
+                                <span className="text-white/50 font-bold uppercase">G</span>
+                              </span>
+                            )}
+                            {p.a > 0 && (
+                              <span className="flex items-center gap-0.5 bg-black/40 rounded px-1.5 py-0.5" style={{ fontSize: "clamp(7px,1.8vw,10px)" }}>
+                                <span className="text-white font-black">{p.a}</span>
+                                <span className="text-white/50 font-bold uppercase">A</span>
+                              </span>
+                            )}
+                            {p.mvp > 0 && (
+                              <span className="flex items-center gap-0.5 bg-black/40 rounded px-1.5 py-0.5" style={{ fontSize: "clamp(7px,1.8vw,10px)" }}>
+                                <span className="text-gold font-black">★</span>
+                                <span className="text-white/50 font-bold uppercase">MVP</span>
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
