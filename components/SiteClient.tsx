@@ -983,8 +983,8 @@ export default function SiteClient({
           .sort((a: any, b: any) => (b.dayResultSummary?.assistances || 0) - (a.dayResultSummary?.assistances || 0));
 
         const lineup = galaxyPlayers
-          .filter((p: any) => p.matchData?.status === 1)
-          .sort((a: any, b: any) => (a.teamData?.apparelNumber || 99) - (b.teamData?.apparelNumber || 99));
+          .filter((p: any) => p.matchData != null)
+          .sort((a: any, b: any) => (a.matchData?.apparelNumber || a.teamData?.apparelNumber || 99) - (b.matchData?.apparelNumber || b.teamData?.apparelNumber || 99));
 
         const oppScorers = oppPlayers
           .filter((p: any) => (p.dayResultSummary?.points || 0) > 0)
@@ -996,8 +996,8 @@ export default function SiteClient({
         const awayLogo = ms.visitorTeam?.logoImgUrl || "";
 
         // Build timeline events (chronological order)
-        // type 31 = GOAL, type 30 = ASSIST, type 61 = YELLOW CARD, type 70 = MVP
-        const relevantTypes = new Set([1, 30, 31, 61, 70, 100]);
+        // type 31 = GOAL, type 30 = ASSIST, type 61 = YELLOW CARD, type 62 = RED CARD, type 70 = MVP
+        const relevantTypes = new Set([1, 30, 31, 61, 62, 70, 100]);
         const chronoEvents = [...(ms.events || [])]
           .filter((e: any) => relevantTypes.has(e.type))
           .reverse(); // API returns newest first
@@ -1083,6 +1083,27 @@ export default function SiteClient({
                   <>
                     <span className="text-sm font-medium text-gray-400 ml-auto truncate">{playerName || "—"}</span>
                     <span className="text-sm shrink-0">🟨</span>
+                    <span className="text-[11px] text-gray-500 w-7 font-mono shrink-0">{min}</span>
+                  </>
+                )}
+              </div>
+            );
+          }
+
+          // RED CARD
+          if (e.type === 62) {
+            return (
+              <div key={idx} className={`flex items-center gap-2 py-1 ${isGalaxy ? "" : "opacity-70"}`}>
+                {isGalaxy ? (
+                  <>
+                    <span className="text-[11px] text-gray-500 w-7 text-right font-mono shrink-0">{min}</span>
+                    <span className="text-sm shrink-0 inline-flex items-center justify-center" style={{ width: 14, height: 18, backgroundColor: "#f04438", borderRadius: 3 }} />
+                    <span className="text-sm font-medium text-gray-200 truncate">{playerName || "—"}</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-sm font-medium text-gray-400 ml-auto truncate">{playerName || "—"}</span>
+                    <span className="text-sm shrink-0 inline-flex items-center justify-center" style={{ width: 14, height: 18, backgroundColor: "#f04438", borderRadius: 3 }} />
                     <span className="text-[11px] text-gray-500 w-7 font-mono shrink-0">{min}</span>
                   </>
                 )}
@@ -1212,12 +1233,18 @@ export default function SiteClient({
                       {lineup.map((p: any, i: number) => {
                         const goals = p.dayResultSummary?.points || 0;
                         const assists = p.dayResultSummary?.assistances || 0;
+                        const yellowCards = p.dayResultSummary?.cardsType1 || 0;
+                        const redCards = p.dayResultSummary?.cardsType2 || 0;
+                        const num = p.matchData?.apparelNumber || p.teamData?.apparelNumber || "—";
+                        const didPlay = p.matchData?.status === 1;
                         return (
-                          <div key={i} className="flex items-center gap-2 bg-white/[0.03] border border-white/[0.06] rounded-lg px-2.5 py-2">
-                            <span className="text-[11px] text-gray-600 font-bold w-5 text-center">{p.teamData?.apparelNumber || "—"}</span>
+                          <div key={i} className={`flex items-center gap-2 bg-white/[0.03] border border-white/[0.06] rounded-lg px-2.5 py-2 ${!didPlay ? "opacity-50" : ""}`}>
+                            <span className="text-[11px] text-gray-600 font-bold w-5 text-center shrink-0">{num}</span>
                             <span className="text-[12px] font-medium truncate flex-1">{p.name} {p.surname}</span>
                             {goals > 0 && <span className="text-[10px] text-gold shrink-0">⚽{goals > 1 ? goals : ""}</span>}
                             {assists > 0 && <span className="text-[10px] text-gray-400 shrink-0">👟{assists > 1 ? assists : ""}</span>}
+                            {yellowCards > 0 && <span className="shrink-0 inline-block" style={{ width: 9, height: 12, backgroundColor: "#facc15", borderRadius: 2 }} />}
+                            {redCards > 0 && <span className="shrink-0 inline-block" style={{ width: 9, height: 12, backgroundColor: "#f04438", borderRadius: 2 }} />}
                           </div>
                         );
                       })}

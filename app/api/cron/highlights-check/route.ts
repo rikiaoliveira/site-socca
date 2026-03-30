@@ -39,37 +39,38 @@ export async function GET(req: NextRequest) {
 
     if (!newGames.length) return NextResponse.json({ skip: true, reason: "Sem highlights novos" });
 
-    let sent = 0;
+    // Marcar todos os novos como vistos para não re-notificar no futuro
     for (const g of newGames) {
-      const isHome = g.homeTeam?.id === SPORT_VIDEO_TEAM_ID;
-      const opponent = isHome ? g.guestTeam?.name : g.homeTeam?.name || "Adversário";
-      const title = "🎬 Novo highlight disponível!";
-      const message = `O resumo de MS Galaxy vs ${opponent} já está no ar. Vai ver! 👀`;
-
-      await fetch("https://onesignal.com/api/v1/notifications", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Key ${process.env.ONESIGNAL_REST_API_KEY}`,
-        },
-        body: JSON.stringify({
-          app_id: process.env.ONESIGNAL_APP_ID,
-          included_segments: ["Total Subscriptions"],
-          headings: { en: title },
-          contents: { en: message },
-          url: `${siteUrl}/?page=highlights`,
-        }),
-      });
-
-      const entry = JSON.stringify({ title, message, timestamp: Date.now() });
-      await redis.lpush("notifications:history", entry);
-      await redis.ltrim("notifications:history", 0, 29);
-
       await redis.sadd("highlights:seen", g.slug);
-      sent++;
     }
 
-    return NextResponse.json({ sent });
+    // Enviar notificação apenas para o highlight mais recente
+    const latest = newGames[0];
+    const isHome = latest.homeTeam?.id === SPORT_VIDEO_TEAM_ID;
+    const opponent = isHome ? latest.guestTeam?.name : latest.homeTeam?.name || "Adversário";
+    const title = "🎬 Novo highlight disponível!";
+    const message = `O resumo de MS Galaxy vs ${opponent} já está no ar. Vai ver! 👀`;
+
+    await fetch("https://onesignal.com/api/v1/notifications", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Key ${process.env.ONESIGNAL_REST_API_KEY}`,
+      },
+      body: JSON.stringify({
+        app_id: process.env.ONESIGNAL_APP_ID,
+        included_segments: ["Total Subscriptions"],
+        headings: { en: title },
+        contents: { en: message },
+        url: `${siteUrl}/?page=highlights`,
+      }),
+    });
+
+    const entry = JSON.stringify({ title, message, timestamp: Date.now() });
+    await redis.lpush("notifications:history", entry);
+    await redis.ltrim("notifications:history", 0, 29);
+
+    return NextResponse.json({ sent: 1, total_new: newGames.length });
   } catch (error) {
     return NextResponse.json({ error: String(error) }, { status: 500 });
   }

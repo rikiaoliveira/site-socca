@@ -34,14 +34,10 @@ export async function GET(req: NextRequest) {
     }).format(new Date());
 
     // Find a match today
+    // A API devolve startTime em hora local de Lisboa — comparamos diretamente o prefixo YYYY-MM-DD
     const todayMatch = (teamData.days || [])
       .flatMap((day: any) => day.matches || [])
-      .find((m: any) => {
-        const matchDate = new Intl.DateTimeFormat("en-CA", {
-          timeZone: "Europe/Lisbon",
-        }).format(new Date(m.startTime));
-        return matchDate === todayStr;
-      });
+      .find((m: any) => (m.startTime || "").slice(0, 10) === todayStr);
 
     if (!todayMatch) {
       return NextResponse.json({ sent: false, reason: "Sem jogo hoje" });
@@ -52,11 +48,9 @@ export async function GET(req: NextRequest) {
       ? todayMatch.visitorTeam?.name || "Adversário"
       : todayMatch.homeTeam?.name || "Adversário";
 
-    const matchTime = new Intl.DateTimeFormat("pt-PT", {
-      hour: "2-digit",
-      minute: "2-digit",
-      timeZone: "Europe/Lisbon",
-    }).format(new Date(todayMatch.startTime));
+    // A API devolve o startTime em hora local de Lisboa (sem timezone).
+    // Extraímos diretamente o HH:MM para evitar conversões incorretas após DST.
+    const matchTime = (todayMatch.startTime || "").slice(11, 16);
 
     const siteUrl = process.env.SITE_URL || "https://msgalaxy.vercel.app";
     const title = "⚽ Hoje é dia de jogo!";
