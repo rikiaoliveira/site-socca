@@ -291,7 +291,7 @@ export default function SiteClient({
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,4 15,12 5,20"/><rect x="17" y="4" width="2" height="16"/></svg>
               </button>
             </div>
-            <div className="flex items-center gap-2 mt-2.5">
+            <div className="hidden sm:flex items-center gap-2 mt-2.5">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="text-gray-500 shrink-0">
                 <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
                 {musicVolume > 0.5 && <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>}
