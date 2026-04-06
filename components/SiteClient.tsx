@@ -198,8 +198,19 @@ export default function SiteClient({
     };
     audio.src = TRACKS[randomStart].file;
     audio.load();
-    // Tenta autoplay (funciona se o browser permitir)
-    audio.play().then(() => setMusicPlaying(true)).catch(() => {});
+
+    // Tenta autoplay imediato
+    audio.play().then(() => setMusicPlaying(true)).catch(() => {
+      // Se bloqueado, arranca na primeira interação do utilizador
+      const unlock = () => {
+        audio.play().then(() => setMusicPlaying(true)).catch(() => {});
+        document.removeEventListener("click", unlock);
+        document.removeEventListener("touchstart", unlock);
+      };
+      document.addEventListener("click", unlock, { once: true });
+      document.addEventListener("touchstart", unlock, { once: true });
+    });
+
     return () => { audio.pause(); audio.onended = null; audio.onerror = null; };
   }, []);
 
