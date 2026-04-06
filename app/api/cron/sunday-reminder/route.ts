@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
 
     const upcoming = (teamData.days || [])
       .flatMap((day: any) => day.matches || [])
-      .filter((m: any) => m.status !== 5)
+      .filter((m: any) => m.status === 0)
       .map((m: any) => ({
         ...m,
         dateStr: new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Lisbon" }).format(new Date(m.startTime)),
@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
       const isHome = weekMatch.idHomeTeam === TEAM_ID;
       const opponent = isHome ? weekMatch.visitorTeam?.name : weekMatch.homeTeam?.name || "Adversário";
       const matchDateTime = new Intl.DateTimeFormat("pt-PT", {
-        weekday: "long", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Lisbon",
+        day: "numeric", month: "long", weekday: "long", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Lisbon",
       }).format(new Date(weekMatch.startTime));
       title = "💛 Bom domingo, Galaxy!";
       message = `Esta semana há jogo — MS Galaxy vs ${opponent} ${matchDateTime}. Força! 💛`;

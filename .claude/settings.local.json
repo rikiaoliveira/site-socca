@@ -3,7 +3,14 @@
     "allow": [
       "Bash(npx kill-port:*)",
       "Bash(gh run:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(grep -v \"^$\")",
+      "Bash(node:*)",
+      "Bash(npx vercel:*)",
+      "Bash(npm install:*)",
+      "Bash(curl:*)",
+      "WebFetch(domain:soccaportugal.mygol.es)",
+      "WebFetch(domain:www.futwiz.com)"
     ]
   }
 }

@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
       .flatMap((day: any) => day.matches || [])
       .find((m: any) => {
         const d = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Lisbon" }).format(new Date(m.startTime));
-        return d === todayStr;
+        return d === todayStr && m.status === 0;
       });
 
     if (!todayMatch) return NextResponse.json({ skip: true, reason: "Sem jogo hoje" });
