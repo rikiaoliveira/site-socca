@@ -31,6 +31,7 @@ const PLAYER_PHOTOS: Record<string, string> = {
   "diogoribeiro": "/players/diogoribeiro.jpg",
   "guilhermepernas": "/players/pernas.jpg",
   "guilhermegarcia": "/players/guilhermegarcia.jpg",
+  "danielmarcos": "/players/daniel.jpg",
 };
 
 function playerPhotoSrc(name: string, sur: string, apiPhoto: string): string {
