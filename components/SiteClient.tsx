@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { TEAM_ID, teamImg } from "@/lib/api";
 
 const POS_NAMES: Record<number, string> = {
@@ -73,6 +73,19 @@ export default function SiteClient({
   const [notifSupported, setNotifSupported] = useState(false);
   const [liveMatchData, setLiveMatchData] = useState<Record<number, any>>({});
   const [notifHistory, setNotifHistory] = useState<any[]>([]);
+
+  // ─── Music player ───
+  const TRACKS = [
+    { file: "/music/Avicii%20-%20The%20Nights.mp3", title: "The Nights", artist: "Avicii" },
+    { file: "/music/Caesars%20-%20Jerk%20It%20Out.mp3", title: "Jerk It Out", artist: "Caesars" },
+    { file: "/music/John%20Newman%20-%20Love%20Me%20Again.mp3", title: "Love Me Again", artist: "John Newman" },
+  ];
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const musicTrackRef = useRef(0);
+  const [musicPlaying, setMusicPlaying] = useState(false);
+  const [musicTrack, setMusicTrack] = useState(0);
+  const [showMusicPlayer, setShowMusicPlayer] = useState(false);
+  const [musicVolume, setMusicVolume] = useState(0.2);
 
   async function openMatchSummary(matchId: number, isLive = false) {
     if (!matchId) return;
@@ -163,9 +176,145 @@ export default function SiteClient({
     };
   }, []);
 
+  // ─── Music: init ───
+  useEffect(() => {
+    const randomStart = Math.floor(Math.random() * TRACKS.length);
+    musicTrackRef.current = randomStart;
+    setMusicTrack(randomStart);
+
+    const audio = new Audio();
+    audio.volume = 0.2;
+    audioRef.current = audio;
+    audio.onerror = () => console.error("[Music] Erro ao carregar:", audio.src, audio.error);
+    audio.onended = () => {
+      // próxima aleatória (diferente da atual)
+      let next: number;
+      do { next = Math.floor(Math.random() * TRACKS.length); } while (next === musicTrackRef.current && TRACKS.length > 1);
+      musicTrackRef.current = next;
+      setMusicTrack(next);
+      audio.src = TRACKS[next].file;
+      audio.load();
+      audio.play().catch((e) => console.error("[Music] play() falhou:", e));
+    };
+    audio.src = TRACKS[randomStart].file;
+    audio.load();
+    // Tenta autoplay (funciona se o browser permitir)
+    audio.play().then(() => setMusicPlaying(true)).catch(() => {});
+    return () => { audio.pause(); audio.onended = null; audio.onerror = null; };
+  }, []);
+
+  function musicToggle() {
+    const audio = audioRef.current;
+    if (!audio) { console.warn("[Music] audioRef nulo"); return; }
+    if (musicPlaying) {
+      audio.pause();
+      setMusicPlaying(false);
+    } else {
+      audio.play()
+        .then(() => setMusicPlaying(true))
+        .catch((e) => console.error("[Music] play() falhou:", e));
+    }
+  }
+
+  function musicNext() {
+    const audio = audioRef.current;
+    if (!audio) return;
+    let next: number;
+    do { next = Math.floor(Math.random() * TRACKS.length); } while (next === musicTrackRef.current && TRACKS.length > 1);
+    musicTrackRef.current = next;
+    setMusicTrack(next);
+    audio.src = TRACKS[next].file;
+    audio.load();
+    if (musicPlaying) audio.play().catch((e) => console.error("[Music] play() falhou:", e));
+  }
+
+  function musicVolumeChange(v: number) {
+    setMusicVolume(v);
+    if (audioRef.current) audioRef.current.volume = v;
+  }
+
+  function toggleMusicPlayer() {
+    const opening = !showMusicPlayer;
+    setShowMusicPlayer(opening);
+    if (opening && !musicPlaying && audioRef.current) {
+      audioRef.current.play()
+        .then(() => setMusicPlaying(true))
+        .catch((e) => console.error("[Music] autoplay bloqueado:", e));
+    }
+  }
+
   function goToPage(p: string) {
     setBgPhoto(BG_PHOTOS[Math.floor(Math.random() * BG_PHOTOS.length)]);
     setPage(p);
+  }
+
+  function MusicPlayer() {
+    return (
+      <div className="fixed bottom-5 right-5 z-50 flex flex-col items-end gap-2">
+        {showMusicPlayer && (
+          <div className="bg-[#0f0f0f]/95 backdrop-blur-xl border border-white/10 rounded-2xl p-4 w-60 shadow-2xl">
+            <div className="flex items-start justify-between mb-3">
+              <div className="min-w-0">
+                <div className="text-[10px] uppercase tracking-widest text-gray-500 mb-0.5">A tocar</div>
+                <div className="text-sm font-bold text-white truncate">{TRACKS[musicTrack].title}</div>
+                <div className="text-xs text-gray-400">{TRACKS[musicTrack].artist}</div>
+              </div>
+              <span className="text-[10px] text-gray-600 mt-1 shrink-0 ml-2">{musicTrack + 1}/{TRACKS.length}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={musicToggle}
+                className="w-9 h-9 rounded-full bg-gold flex items-center justify-center text-black shrink-0 hover:bg-yellow-300 transition-colors"
+              >
+                {musicPlaying ? (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                ) : (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+                )}
+              </button>
+
+              <button
+                onClick={musicNext}
+                className="w-7 h-7 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:border-white/20 transition-colors shrink-0"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,4 15,12 5,20"/><rect x="17" y="4" width="2" height="16"/></svg>
+              </button>
+            </div>
+            <div className="flex items-center gap-2 mt-2.5">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="text-gray-500 shrink-0">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                {musicVolume > 0.5 && <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>}
+                {musicVolume > 0 && <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>}
+              </svg>
+              <input
+                type="range"
+                min={0}
+                max={1}
+                step={0.02}
+                value={musicVolume}
+                onChange={(e) => musicVolumeChange(Number(e.target.value))}
+                className="flex-1 h-1 accent-gold cursor-pointer"
+                style={{ accentColor: "#FCDC00" }}
+              />
+            </div>
+          </div>
+        )}
+        <button
+          onClick={toggleMusicPlayer}
+          className={`w-11 h-11 rounded-full flex items-center justify-center shadow-xl transition-all border ${
+            musicPlaying
+              ? "bg-gold border-gold/50 text-black"
+              : "bg-[#111]/90 border-white/10 text-gray-400 hover:text-white hover:border-white/20"
+          }`}
+          title="Player de música"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="9" cy="18" r="3"/><circle cx="18" cy="15" r="3"/>
+            <polyline points="12,18 12,2 21,5 21,9 12,6"/>
+          </svg>
+        </button>
+      </div>
+    );
   }
 
   // Deep-link: ao abrir via notificação, navega para a página/jogo indicado na URL
@@ -402,6 +551,7 @@ export default function SiteClient({
           </div>
         )}
 
+      <MusicPlayer />
       </section>
     );
   }
@@ -1256,6 +1406,7 @@ export default function SiteClient({
           </div>
         );
       })()}
+      <MusicPlayer />
     </div>
   );
 }
