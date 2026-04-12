@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
 
     const upcoming = (teamData.days || [])
       .flatMap((day: any) => day.matches || [])
-      .filter((m: any) => m.status === 0)
+      .filter((m: any) => m.status !== 5)
       .map((m: any) => ({
         ...m,
         dateStr: new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Lisbon" }).format(new Date(m.startTime)),

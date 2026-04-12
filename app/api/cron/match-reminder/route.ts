@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
     // A API devolve startTime em hora local de Lisboa — comparamos diretamente o prefixo YYYY-MM-DD
     const todayMatch = (teamData.days || [])
       .flatMap((day: any) => day.matches || [])
-      .find((m: any) => (m.startTime || "").slice(0, 10) === todayStr && m.status === 0);
+      .find((m: any) => (m.startTime || "").slice(0, 10) === todayStr && m.status !== 5);
 
     if (!todayMatch) {
       return NextResponse.json({ sent: false, reason: "Sem jogo hoje" });
