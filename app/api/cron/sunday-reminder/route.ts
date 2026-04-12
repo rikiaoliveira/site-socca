@@ -47,9 +47,7 @@ export async function GET(req: NextRequest) {
     if (todayMatch) {
       const isHome = todayMatch.idHomeTeam === TEAM_ID;
       const opponent = isHome ? todayMatch.visitorTeam?.name : todayMatch.homeTeam?.name || "Adversário";
-      const matchTime = new Intl.DateTimeFormat("pt-PT", {
-        hour: "2-digit", minute: "2-digit", timeZone: "Europe/Lisbon",
-      }).format(new Date(todayMatch.startTime));
+      const matchTime = (todayMatch.startTime || "").slice(11, 16);
       title = "💛 Domingo de jogo!";
       message = `Hoje é dia de MS Galaxy! MS Galaxy vs ${opponent} às ${matchTime}. Força Galaxy! 💛`;
       url = `${siteUrl}/?page=calendario`;
