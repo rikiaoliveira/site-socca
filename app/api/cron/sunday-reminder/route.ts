@@ -61,9 +61,9 @@ export async function GET(req: NextRequest) {
       message = `Esta semana há jogo — MS Galaxy vs ${opponent} ${matchDateTime}. Força! 💛`;
       url = `${siteUrl}/?page=calendario`;
     } else {
-      title = "💛 Bom domingo, Galaxy!";
-      message = "Sem jogo esta semana, mas o próximo está a chegar. Mantém-te pronto! 💪";
-      url = `${siteUrl}/?page=notificacoes`;
+      title = "😴 Domingo de descanso!";
+      message = "Sem jogo esta semana — aproveita para descansar. O próximo está a chegar! 💛";
+      url = `${siteUrl}/?page=calendario`;
     }
 
     await fetch("https://onesignal.com/api/v1/notifications", {
