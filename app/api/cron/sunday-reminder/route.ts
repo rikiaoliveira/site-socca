@@ -24,23 +24,14 @@ export async function GET(req: NextRequest) {
     });
     const teamData = await teamRes.json();
 
-    const now = new Date();
-    const todayStr = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Lisbon" }).format(now);
-    const nextWeekStr = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Lisbon" }).format(
-      new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
-    );
+    const todayStr = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Lisbon" }).format(new Date());
 
-    const upcoming = (teamData.days || [])
+    const todayMatch = (teamData.days || [])
       .flatMap((day: any) => day.matches || [])
       .filter((m: any) => m.status !== 5)
-      .map((m: any) => ({
-        ...m,
-        dateStr: new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Lisbon" }).format(new Date(m.startTime)),
-      }))
-      .sort((a: any, b: any) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
-
-    const todayMatch = upcoming.find((m: any) => m.dateStr === todayStr);
-    const weekMatch = !todayMatch && upcoming.find((m: any) => m.dateStr > todayStr && m.dateStr <= nextWeekStr);
+      .find((m: any) =>
+        new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Lisbon" }).format(new Date(m.startTime)) === todayStr
+      );
 
     let title: string, message: string, url: string;
 
@@ -51,18 +42,9 @@ export async function GET(req: NextRequest) {
       title = "💛 Domingo de jogo!";
       message = `Hoje é dia de MS Galaxy! MS Galaxy vs ${opponent} às ${matchTime}. Força Galaxy! 💛`;
       url = `${siteUrl}/?page=calendario`;
-    } else if (weekMatch) {
-      const isHome = weekMatch.idHomeTeam === TEAM_ID;
-      const opponent = isHome ? weekMatch.visitorTeam?.name : weekMatch.homeTeam?.name || "Adversário";
-      const matchDateTime = new Intl.DateTimeFormat("pt-PT", {
-        day: "numeric", month: "long", weekday: "long", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Lisbon",
-      }).format(new Date(weekMatch.startTime));
-      title = "💛 Bom domingo, Galaxy!";
-      message = `Esta semana há jogo — MS Galaxy vs ${opponent} ${matchDateTime}. Força! 💛`;
-      url = `${siteUrl}/?page=calendario`;
     } else {
       title = "😴 Domingo de descanso!";
-      message = "Sem jogo esta semana — aproveita para descansar. O próximo está a chegar! 💛";
+      message = "Sem jogo hoje — aproveita para descansar. O próximo está a chegar! 💛";
       url = `${siteUrl}/?page=calendario`;
     }
 
